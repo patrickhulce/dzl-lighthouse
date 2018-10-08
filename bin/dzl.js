@@ -15,6 +15,9 @@ const args = yargs
       type: 'string',
       default: 'local',
     },
+    runId: {
+      type: 'string',
+    },
     limit: {
       type: 'number',
       default: 5,
@@ -79,6 +82,7 @@ async function collect() {
       const nextStartAt = args.limit * i
       console.log('Running', nextStartAt, 'to', nextStartAt + args.limit, 'in child process')
       const mappedArgs = replaceStartAt(process.argv.slice(1), nextStartAt)
+      mappedArgs.push('--runId', args.runId)
       execFileSync(process.argv[0], mappedArgs, {stdio: 'inherit'})
     }
   }
