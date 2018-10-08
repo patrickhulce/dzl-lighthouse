@@ -4,7 +4,7 @@ module.exports = {
     // repositoryPath: 'path/to/lighthouse',
   },
   collection: {
-    runs: 3,
+    runs: 9,
     urls: [
       'https://example.com',
       'https://www.cnn.com',
