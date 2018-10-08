@@ -22,7 +22,7 @@ yarn install-extension
 
 cd "$DZL_PATH" || exit 1
 
-node ./bin/dzl.js collect --label="official-ci" --hash="$LH_HASH" --concurrency=1 --config=./agent.config.js
+node ./bin/dzl.js collect --limit=1 --label="official-ci" --hash="$LH_HASH" --concurrency=1 --config=./agent.config.js
 DZL_EXIT_CODE=$?
 
 if [ $DZL_EXIT_CODE -eq 0 ]; then
