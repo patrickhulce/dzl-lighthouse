@@ -11,7 +11,7 @@ const args = yargs
     },
     label: {
       type: 'string',
-      default: 'latest',
+      default: 'local',
     },
     concurrency: {
       type: 'number',
