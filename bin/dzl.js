@@ -9,6 +9,10 @@ const args = yargs
       type: 'string',
       default: 'master',
     },
+    label: {
+      type: 'string',
+      default: 'latest',
+    },
     concurrency: {
       type: 'number',
       default: 2,
