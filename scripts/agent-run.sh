@@ -18,7 +18,6 @@ if grep -q "$LH_HASH" last-processed-hash.report.json; then
 fi
 
 yarn install
-yarn install-extension
 
 cd "$DZL_PATH" || exit 1
 
