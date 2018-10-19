@@ -1,5 +1,6 @@
 .tmp/
 node_modules/
+dist/
 
 
 *.config.js

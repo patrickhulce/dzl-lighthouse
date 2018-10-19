@@ -12,7 +12,9 @@
   "license": "MIT",
   "dependencies": {
     "bluebird": "^3.5.2",
+    "body-parser": "^1.18.3",
     "execa": "^1.0.0",
+    "express": "^4.16.4",
     "influx": "^5.0.7",
     "lodash": "^4.17.11",
     "sequelize": "^4.39.1",

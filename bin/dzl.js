@@ -35,7 +35,17 @@ const args = yargs
     },
     config: {
       type: 'string',
-      required: true,
+      default: 'agent.config.js',
+    },
+  })
+  .command('serve', 'run the web server', {
+    port: {
+      type: 'number',
+      default: 8088,
+    },
+    config: {
+      type: 'string',
+      default: 'agent.config.js',
     },
   })
   .demandCommand().argv
@@ -88,10 +98,19 @@ async function collect() {
   }
 }
 
+async function serve() {
+  args.configPath = args.config
+  args.config = require(path.resolve(process.cwd(), args.config))
+  await commands.serve(args)
+}
+
 async function run() {
   switch (args._[0]) {
     case 'collect':
       await collect()
+      break
+    case 'serve':
+      await serve()
       break
     default:
       throw new Error(`Unrecognized command ${args._[0]}`)
