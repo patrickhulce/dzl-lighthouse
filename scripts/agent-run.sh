@@ -10,10 +10,10 @@ xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 cd "$LH_PATH" || exit 1
 
 git checkout -f origin/master || exit 1
+git pull origin master || exit 1
 export LH_HASH=$(git rev-parse HEAD)
 
 export LABEL_PREFIX="official-ci"
-
 if grep -q "$LH_HASH" last-processed-hash.report.json; then
   echo "Hash has not changed since last processing, will be a continuous run."
   export LABEL_PREFIX="official-continuous"
