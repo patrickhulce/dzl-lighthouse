@@ -7,6 +7,10 @@ body > .container-fluid {
   padding: 20px;
 }
 
+h1 {
+  text-align: center;
+}
+
 .graph-container {
   min-height: 300px;
 }
