@@ -12,16 +12,22 @@ cd "$LH_PATH" || exit 1
 git checkout -f origin/master || exit 1
 export LH_HASH=$(git rev-parse HEAD)
 
-if grep -q "$LH_HASH" last-processed-hash.report.json; then
-  echo "Hash has not changed since last processing, exiting."
-  exit 0
-fi
+export LABEL_PREFIX="official-ci"
 
-yarn install
+if grep -q "$LH_HASH" last-processed-hash.report.json; then
+  echo "Hash has not changed since last processing, will be a continuous run."
+  export LABEL_PREFIX="official-continuous"
+else
+  yarn install
+fi
 
 cd "$DZL_PATH" || exit 1
 
-node ./bin/dzl.js collect --limit=1 --label="official-ci" --hash="$LH_HASH" --concurrency=1 --config=./agent.config.js
+node ./bin/dzl.js collect --limit=1 --label="$LABEL_PREFIX-control" --hash="$LH_HASH" --concurrency=1 --config=./agent.control.config.js
+DZL_EXIT_CODE=$?
+[ $DZL_EXIT_CODE -eq 0 ] || exit 1
+
+node ./bin/dzl.js collect --limit=1 --label="$LABEL_PREFIX-wild" --hash="$LH_HASH" --concurrency=1 --config=./agent.wild.config.js
 DZL_EXIT_CODE=$?
 
 if [ $DZL_EXIT_CODE -eq 0 ]; then
