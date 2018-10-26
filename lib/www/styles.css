@@ -11,6 +11,15 @@ h1 {
   text-align: center;
 }
 
+#environment {
+  text-align: center;
+}
+
+#environment a,
+#environment span {
+  font-weight: bold;
+}
+
 .graph-container {
   min-height: 300px;
 }
