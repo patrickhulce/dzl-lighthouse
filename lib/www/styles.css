@@ -1,0 +1,52 @@
+html,
+body {
+  margin: 0;
+}
+
+body > .container-fluid {
+  padding: 20px;
+}
+
+.graph-container {
+  min-height: 300px;
+}
+
+.loader {
+  display: none;
+  position: fixed;
+  background: white;
+  width: 100vw;
+  height: 100vh;
+  z-index: 100;
+
+  align-content: center;
+  align-items: center;
+  justify-content: center;
+  justify-items: center;
+
+  font-size: 60px;
+}
+
+.is-loading .loader {
+  display: flex;
+}
+
+.tile {
+  text-align: center;
+  background: #34ba34;
+  border: 1px solid white;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  align-content: center;
+  justify-content: center;
+  justify-items: center;
+  flex-direction: column;
+
+  color: white;
+  font-weight: bold;
+}
+
+.tile .value {
+  font-size: 24px;
+}
