@@ -12,14 +12,20 @@ h2 {
   text-align: center;
 }
 
-#environment {
+.environment {
   text-align: center;
   margin-bottom: 20px;
+  border-right: 1px solid #ccc;
 }
 
-#environment a,
-#environment span {
+.environment:last-child {
+  border-right: none;
+}
+
+.environment a,
+.environment span {
   font-weight: bold;
+  display: block;
 }
 
 .graph-container {
