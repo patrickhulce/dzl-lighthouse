@@ -7,12 +7,14 @@ body > .container-fluid {
   padding: 20px;
 }
 
-h1 {
+h1,
+h2 {
   text-align: center;
 }
 
 #environment {
   text-align: center;
+  margin-bottom: 20px;
 }
 
 #environment a,
