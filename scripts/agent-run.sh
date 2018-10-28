@@ -23,11 +23,7 @@ fi
 
 cd "$DZL_PATH" || exit 1
 
-node ./bin/dzl.js collect --limit=1 --label="$LABEL_PREFIX-control" --hash="$LH_HASH" --concurrency=1 --config=./agent.control.config.js
-DZL_EXIT_CODE=$?
-[ $DZL_EXIT_CODE -eq 0 ] || exit 1
-
-node ./bin/dzl.js collect --limit=1 --label="$LABEL_PREFIX-wild" --hash="$LH_HASH" --concurrency=1 --config=./agent.wild.config.js
+node ./bin/dzl.js collect --limit=1 --label="$LABEL_PREFIX" --hash="$LH_HASH" --concurrency=1 --config=./agent.config.js
 DZL_EXIT_CODE=$?
 
 if [ $DZL_EXIT_CODE -eq 0 ]; then
