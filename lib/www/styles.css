@@ -71,3 +71,20 @@ h2 {
 .tile .value {
   font-size: 24px;
 }
+
+/* COMPARISON SPECIFIC */
+.hash-pickers {
+  margin: 20px;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}
+.hash-pickers select {
+  background: transparent;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  height: 29px;
+  padding: 5px; /* If you add too much padding here, the options won't show in IE */
+  margin: 10px;
+}
