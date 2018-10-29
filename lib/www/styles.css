@@ -54,7 +54,6 @@ h2 {
 
 .tile {
   text-align: center;
-  background: #34ba34;
   border: 1px solid white;
   min-height: 80px;
   display: flex;
@@ -66,6 +65,19 @@ h2 {
 
   color: white;
   font-weight: bold;
+}
+
+.tile--success {
+  background: #34ba34;
+}
+.tile--neutral {
+  background: #666;
+}
+.tile--warn {
+  background: #d38b2c;
+}
+.tile--error {
+  background: #d32c2c;
 }
 
 .tile .value {
