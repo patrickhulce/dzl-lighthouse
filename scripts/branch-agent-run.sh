@@ -9,7 +9,11 @@ xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 
 cd "$LH_PATH" || exit 1
 
-curl https://github.com/GoogleChrome/lighthouse/pulls > pulls.html
+# If `pulls.html` is more than an hour old or not there, fetch a new one
+if ! [ -e pulls.html ] || test `find pulls.html -mmin +60`; then
+  curl https://github.com/GoogleChrome/lighthouse/pulls > pulls.html
+fi
+
 PULL_IDS=$(grep 'pull.[0-9]' pulls.html | sed -e 's/.*pull.\([0-9]\+\).*/\1/g' | uniq)
 
 for pullid in $PULL_IDS; do
