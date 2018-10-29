@@ -4,38 +4,16 @@
     <div class="hash-pickers">
       <select id="hash-a-select"></select>
       <select id="hash-b-select"></select>
+      <select id="metric-select">
+        <option value="timing-total" selected>Runtime</option>
+        <option value="first-contentful-paint-deltasPercent">FCP</option>
+        <option value="interactive-deltasPercent">TTI</option>
+      </select>
     </div>
     <div class="row">
       <div id="environment-a" class="col-6"></div>
       <div id="environment-b" class="col-6"></div>
     </div>
   </header>
-  <div class="row">
-    <div class="col-6 graph-container">
-      <div id="runtime-histogram"></div>
-    </div>
-    <div class="col-6 graph-container">
-      <div id="tti-histogram"></div>
-    </div>
-  </div>
-  <div class="row">
-    <div class="col-2">
-      <div id="runtime-avg-a" class="tile"></div>
-    </div>
-    <div class="col-2">
-      <div id="runtime-avg-b" class="tile"></div>
-    </div>
-    <div class="col-2">
-      <div id="runtime-avg-pvalue" class="tile"></div>
-    </div>
-    <div class="col-2">
-      <div id="tti-avg-a" class="tile"></div>
-    </div>
-    <div class="col-2">
-      <div id="tti-avg-b" class="tile"></div>
-    </div>
-    <div class="col-2">
-      <div id="tti-avg-pvalue" class="tile"></div>
-    </div>
-  </div>
+  <div id="graphs"></div>
 </div>
