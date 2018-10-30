@@ -17,7 +17,8 @@ fi
 PULL_IDS=$(grep 'pull.[0-9]' pulls.html | sed -e 's/.*pull.\([0-9]\+\).*/\1/g' | uniq)
 
 for pullid in $PULL_IDS; do
-  git fetch origin "pull/$pullid/head:branch$pullid"
+  # For some reason, very important to git that this is not quoted below
+  git fetch origin pull/$pullid/head:branch$pullid
 
   if git log "branch$pullid" --not origin/master --no-merges | grep DZL ; then
     echo "PR #$pullid needs a DZL run, running..."
