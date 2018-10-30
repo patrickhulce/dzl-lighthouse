@@ -1,8 +1,8 @@
 #!/bin/bash
 
-export LH_PATH="$HOME/lighthouse"
+export LH_PATH="$HOME/lighthouse-2"
 export DZL_PATH="$HOME/dzl"
-export DISPLAY=:99.0
+export DISPLAY=:98.0
 export CHROME_PATH="$(which google-chrome-stable)"
 
 xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
