@@ -28,4 +28,10 @@ curl http://localhost:8088/by-url.js > dist/by-url.js
 curl http://localhost:8088/comparison.js > dist/comparison.js
 curl http://localhost:8088/dashboard.js > dist/dashboard.js
 
+echo "lh-dzl-${PR_ID:-master}.surge.sh" > dist/CNAME
+
+if which surge; then
+  cd dist && surge
+fi
+
 kill $SERVER_PID
