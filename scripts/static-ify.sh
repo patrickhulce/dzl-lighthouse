@@ -31,7 +31,7 @@ curl http://localhost:8088/dashboard.js > dist/dashboard.js
 echo "lh-dzl-${PR_ID:-master}.surge.sh" > dist/CNAME
 
 if which surge; then
-  cd dist && surge
+  cd dist && surge .
 fi
 
 kill $SERVER_PID
