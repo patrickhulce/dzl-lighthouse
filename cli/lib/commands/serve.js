@@ -4,7 +4,7 @@ const fs = require('fs')
 const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
-const storage = require(`../storages/sqlite`)
+const storage = require(`../storages/sql`)
 
 const readFile = util.promisify(fs.readFile)
 const staticDir = path.join(__dirname, '../www')
