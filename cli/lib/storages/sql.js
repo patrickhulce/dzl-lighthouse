@@ -4,40 +4,57 @@ const Sequelize = require('sequelize')
 const METRICS = ['first-contentful-paint', 'speed-index', 'interactive']
 const TIMINGS = ['total', 'total-minus-load', 'lh:gather:afterPass', 'lh:runner:auditing']
 
+const sharedAttributes = {
+  id: {type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true},
+
+  url: Sequelize.STRING(256),
+  runId: Sequelize.STRING(256),
+  batchId: Sequelize.STRING(80),
+  batchTime: Sequelize.DATE,
+  label: Sequelize.STRING(80),
+  hash: Sequelize.STRING(80),
+}
+
+const sharedIndexes = [
+  {
+    name: 'batch',
+    method: 'BTREE',
+    fields: ['batchId'],
+  },
+  {
+    name: 'batchtime',
+    method: 'BTREE',
+    fields: ['batchTime'],
+  },
+  {
+    name: 'label_url',
+    method: 'BTREE',
+    fields: ['label', 'url'],
+  },
+]
+
 const dataPointModel = [
   'data_points',
   {
-    id: {type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true},
+    ...sharedAttributes,
 
     name: Sequelize.STRING(80),
-    type: Sequelize.ENUM({values: ['metric', 'timing-breakdown', 'timing']}),
+    type: Sequelize.STRING(32),
     value: Sequelize.DOUBLE(12, 4),
-
-    url: Sequelize.STRING(256),
-    runId: Sequelize.STRING(256),
-    batchId: Sequelize.STRING(80),
-    batchTime: Sequelize.DATE,
-    label: Sequelize.STRING(80),
-    hash: Sequelize.STRING(80),
   },
   {
-    indexes: [
-      {
-        name: 'batch',
-        method: 'BTREE',
-        fields: ['batchId'],
-      },
-      {
-        name: 'batchtime',
-        method: 'BTREE',
-        fields: ['batchTime'],
-      },
-      {
-        name: 'label_url',
-        method: 'BTREE',
-        fields: ['label', 'url'],
-      },
-    ],
+    indexes: [...sharedIndexes],
+  },
+]
+
+const rawModel = [
+  'lhrs',
+  {
+    ...sharedAttributes,
+    lhr: Sequelize.TEXT,
+  },
+  {
+    indexes: [...sharedIndexes].map(o => ({...o, name: `lhrs_${o.name}`})),
   },
 ]
 
@@ -53,10 +70,11 @@ async function build(storageOptions) {
   )
 
   const DataPoint = sequelize.define(...dataPointModel)
+  const LHR = sequelize.define(...rawModel)
 
   await sequelize.sync()
 
-  return {sequelize, DataPoint}
+  return {sequelize, DataPoint, LHR}
 }
 
 function cleanTimingName(name) {
@@ -76,9 +94,10 @@ module.exports = {
     password: 'lighthouse',
   },
   async run(lhrs, {batchId, label, hash, storageOptions}) {
-    const {DataPoint} = await build(storageOptions)
+    const {DataPoint, LHR} = await build(storageOptions)
 
-    const rows = []
+    const dataPoints = []
+    const lhrRows = []
     const batchTime = new Date().toISOString()
     for (const item of lhrs) {
       const lhr = item._raw
@@ -89,24 +108,30 @@ module.exports = {
 
       for (const name of METRICS) {
         const value = lhr.audits[name].rawValue
-        rows.push({...baseRow, name, value, type: 'metric'})
+        dataPoints.push({...baseRow, name, value, type: 'metric'})
       }
 
       for (const name of TIMINGS) {
         const value = lhr.timing[name]
-        rows.push({...baseRow, name: `timing-${cleanTimingName(name)}`, value, type: 'timing'})
+        const rowName = cleanTimingName(name)
+        dataPoints.push({...baseRow, name: `timing-${rowName}`, value, type: 'timing'})
       }
 
       for (const [name, value] of Object.entries(lhr.timing)) {
         if (!name.startsWith('lh:')) continue
         const rowName = cleanTimingName(name)
-        rows.push({...baseRow, name: `timing-${rowName}`, value, type: 'timing-breakdown'})
+        dataPoints.push({...baseRow, name: `timing-${rowName}`, value, type: 'timing-breakdown'})
+        delete lhr.timing[name]
       }
+
+      lhrRows.push({...baseRow, lhr: JSON.stringify(lhr)})
     }
 
-    const batches = _.chunk(rows, 100)
-    for (const batch of batches) {
+    const dpBatches = _.chunk(dataPoints, 100)
+    for (const batch of dpBatches) {
       await DataPoint.bulkCreate(batch)
     }
+
+    await LHR.bulkCreate(lhrRows)
   },
 }
