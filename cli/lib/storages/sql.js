@@ -124,6 +124,11 @@ module.exports = {
         delete lhr.timing[name]
       }
 
+      for (const [id, result] of Object.entries(lhr.audits)) {
+        const value = result.score
+        dataPoints.push({...baseRow, name: `audit-score-${id}`, value, type: 'audit-score'})
+      }
+
       lhrRows.push({...baseRow, lhr: JSON.stringify(lhr)})
     }
 

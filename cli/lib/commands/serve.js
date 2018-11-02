@@ -83,6 +83,7 @@ module.exports = async function serve(args) {
 
     const where = {
       label: req.query.label || 'official-ci',
+      type: {$ne: 'timing-breakdown'},
     }
 
     if (req.query.comparison) {
