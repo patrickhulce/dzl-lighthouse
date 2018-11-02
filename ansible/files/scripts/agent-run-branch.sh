@@ -33,33 +33,35 @@ for pullid in $PULL_IDS; do
 
   # For some reason, very important to git that this is not quoted below
   git fetch origin pull/$pullid/head:branch$pullid
+  git checkout -f "branch$pullid"
+  export LH_HASH=$(git rev-parse HEAD)
 
-  if git log "branch$pullid" --not origin/master --no-merges | grep DZL ; then
-    echo "PR #$pullid needs a DZL run, running..."
-    git checkout -f "branch$pullid"
-    export LH_HASH=$(git rev-parse HEAD)
+  if grep -q "$LH_HASH" "last-processed-hash-branch-$pullid.artifacts.log"; then
+    echo "Hash has not changed since last processing, skipping..."
+    continue
+  fi
 
-    if grep -q "$LH_HASH" "last-processed-hash-branch-$pullid.artifacts.log"; then
-      echo "Hash has not changed since last processing, skipping..."
-      continue
-    fi
+  PR_HTML_FILE="pull-$pullid.report.html"
+  curl https://github.com/GoogleChrome/lighthouse/pull/$pullid > $PR_HTML_FILE
 
-    yarn install || exit 1
-
-    cd "$DZL_PATH" || exit 1
-
-    node ./bin/dzl.js collect --limit=1 --label="branch-$pullid" --hash="$LH_HASH" --concurrency=1 --config=$DZL_CONFIG_FILE
-    DZL_EXIT_CODE=$?
-
-    if [ $DZL_EXIT_CODE -eq 0 ]; then
-      echo "Success!"
-      echo "$LH_HASH" > "$LH_PATH/last-processed-hash-branch-$pullid.artifacts.log"
-    else
-      echo "Failed, exiting with error code 1"
-      exit 1
-    fi
-  else
+  if ! grep 'DZL, do a barrel roll' $PR_HTML_FILE ; then
     echo "PR #$pullid makes no mention of DZL, skipping..."
+    continue
+  fi
+
+  echo "PR #$pullid needs a DZL run, running..."
+  yarn install || exit 1
+
+  cd "$DZL_PATH" || exit 1
+
+  node ./bin/dzl.js collect --limit=1 --label="branch-$pullid" --hash="$LH_HASH" --concurrency=1 --config=$DZL_CONFIG_FILE
+  DZL_EXIT_CODE=$?
+
+  if [ $DZL_EXIT_CODE -eq 0 ]; then
+    echo "Success!"
+    echo "$LH_HASH" > "$LH_PATH/last-processed-hash-branch-$pullid.artifacts.log"
+  else
+    echo "Failed, exiting with error code 1"
+    exit 1
   fi
 done
-
