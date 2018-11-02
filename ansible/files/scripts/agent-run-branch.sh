@@ -9,9 +9,9 @@ export DZL_CONFIG_FILE="/dzl/conf/agent-branch.config.js"
 xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 
 cd "$DZL_PATH" || exit 1
-yarn install || exit 1
 git checkout -f master
-git pull
+git pull origin master
+yarn install || exit 1
 
 cd "$LH_PATH" || exit 1
 yarn install || exit 1

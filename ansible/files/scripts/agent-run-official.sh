@@ -24,7 +24,7 @@ fi
 
 cd "$DZL_PATH" || exit 1
 git checkout -f master
-git pull
+git pull origin master
 yarn install || exit 1
 
 node ./bin/dzl.js collect --limit=1 --label="$LABEL_PREFIX" --hash="$LH_HASH" --concurrency=1 --config=$DZL_CONFIG_FILE
