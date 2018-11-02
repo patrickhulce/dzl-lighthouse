@@ -69,5 +69,6 @@ module.exports = async function collect(args) {
     )
 
     await storage.run(lhrs, options)
+    console.log('LHRs saved!')
   }
 }

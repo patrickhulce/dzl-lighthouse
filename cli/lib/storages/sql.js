@@ -11,7 +11,7 @@ const dataPointModel = [
 
     name: Sequelize.STRING(80),
     type: Sequelize.ENUM({values: ['metric', 'timing-breakdown', 'timing']}),
-    value: Sequelize.DOUBLE(12, 12),
+    value: Sequelize.DOUBLE(12, 4),
 
     url: Sequelize.STRING(256),
     runId: Sequelize.STRING(256),
@@ -104,7 +104,7 @@ module.exports = {
       }
     }
 
-    const batches = _.chunk(rows, 20)
+    const batches = _.chunk(rows, 100)
     for (const batch of batches) {
       await DataPoint.bulkCreate(batch)
     }
