@@ -11,7 +11,7 @@ const dataPointModel = [
 
     name: Sequelize.STRING(80),
     type: Sequelize.ENUM({values: ['metric', 'timing-breakdown', 'timing']}),
-    value: Sequelize.DOUBLE(11, 12),
+    value: Sequelize.DOUBLE(12, 12),
 
     url: Sequelize.STRING(256),
     runId: Sequelize.STRING(256),

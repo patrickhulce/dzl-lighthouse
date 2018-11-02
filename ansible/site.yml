@@ -67,6 +67,7 @@
   tasks:
     - name: install dependencies
       become_user: root
+      register: mysqlapt
       apt:
         pkg: '{{ packages }}'
         state: present
@@ -75,9 +76,17 @@
         packages:
           - python3-mysqldb # required for mysql_user module to work
           - mysql-server
-    - name: start the mysql service
+    - name: listen to mysql on all interfaces
       become_user: root
-      service: name=mysql state=started enabled=yes
+      register: mysqlcnf
+      lineinfile:
+        path: /etc/mysql/mysql.conf.d/mysqld.cnf
+        regexp: '^bind-address'
+        line: 'bind-address            = 0.0.0.0'
+    - name: restart the mysql service
+      become_user: root
+      service: name=mysql state=restarted enabled=yes
+      when: mysqlapt.changed or mysqlcnf.changed
     - name: create mysql user
       become_user: root
       mysql_user:
