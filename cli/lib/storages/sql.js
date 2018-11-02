@@ -42,13 +42,14 @@ const dataPointModel = [
 ]
 
 async function build(storageOptions) {
+  const logging = msg => console.log(msg.slice(0, 240))
   const sequelize = new Sequelize(
     storageOptions.database,
     storageOptions.user,
     storageOptions.password,
     storageOptions.path
-      ? {dialect: 'sqlite', storage: storageOptions.path}
-      : {dialect: 'mysql', host: storageOptions.host},
+      ? {dialect: 'sqlite', storage: storageOptions.path, logging}
+      : {dialect: 'mysql', host: storageOptions.host, logging},
   )
 
   const DataPoint = sequelize.define(...dataPointModel)
