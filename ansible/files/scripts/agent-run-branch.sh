@@ -10,6 +10,8 @@ xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 
 cd "$DZL_PATH" || exit 1
 yarn install || exit 1
+git checkout -f master
+git pull
 
 cd "$LH_PATH" || exit 1
 yarn install || exit 1
@@ -36,6 +38,8 @@ for pullid in $PULL_IDS; do
       echo "Hash has not changed since last processing, skipping..."
       continue
     fi
+
+    yarn install || exit 1
 
     cd "$DZL_PATH" || exit 1
 
