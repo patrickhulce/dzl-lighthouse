@@ -26,7 +26,8 @@
       file: path='/dzl/{{ item }}' state=directory owner=dzl group=dzl mode=0755
       with_items:
         - src
-        - logs
+        - conf
+        - log
         - scripts
     - name: add node apt key
       become_user: root
@@ -51,10 +52,21 @@
           - xvfb
           - nodejs
           - google-chrome-stable
+    - name: install npm globals
+      become_user: root
+      npm: name='{{ item }}' global=yes
+      with_items: [yarn, surge]
     - name: setup LH repo
       git: repo=https://github.com/GoogleChrome/lighthouse.git dest=/dzl/src/lighthouse
     - name: setup DZL repo
       git: repo=https://github.com/patrickhulce/dzl-lighthouse.git dest=/dzl/src/dzl
+    - name: copy scripts over
+      copy: src=files/scripts/ dest=/dzl/scripts mode=0755
+    - name: copy templates over
+      template: src='templates/{{ item }}' dest='/dzl/{{ item }}'
+      with_items:
+        - conf/agent-official.config.js
+        - conf/agent-branch.config.js
 - hosts: masters
   become: yes
   become_user: dzl
@@ -67,4 +79,25 @@
         update_cache: yes
       vars:
         packages:
+          - python3-mysqldb # required for mysql_user module to work
           - mysql-server
+    - name: start the mysql service
+      become_user: root
+      service: name=mysql state=started enabled=yes
+    - name: create mysql user
+      become_user: root
+      mysql_user:
+        name: dzl
+        host: '{{ item }}'
+        password: 'lighthouse'
+        check_implicit_admin: yes
+        priv: '*.*:ALL,GRANT'
+      with_items:
+        - '{{ ansible_default_ipv4.address }}' # allow over internal IP address
+        - 127.0.0.1
+        - ::1
+        - localhost
+    - name: create mysql db
+      mysql_db: name=dzl_lighthouse state=present login_user=dzl login_password=lighthouse
+    - name: setup cron job for agent-run-official
+      cron: name='dzl official' job='/usr/bin/flock -n /dzl/log/official.lockfile /dzl/scripts/agent-run-official.sh >> /dzl/log/official.log'

@@ -1,22 +1,29 @@
 #!/bin/bash
 
-export LH_PATH="$HOME/lighthouse-2"
-export DZL_PATH="$HOME/dzl"
+export LH_PATH="/dzl/src/lighthouse"
+export DZL_PATH="/dzl/src/dzl"
 export DISPLAY=:98.0
 export CHROME_PATH="$(which google-chrome-stable)"
+export DZL_CONFIG_FILE="/dzl/conf/agent-branch.config.js"
 
 xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 
-cd "$LH_PATH" || exit 1
+cd "$DZL_PATH" || exit 1
+yarn install || exit 1
 
-# If `pulls.html` is more than an hour old or not there, fetch a new one
-if ! [ -e pulls.html ] || test `find pulls.html -mmin +60`; then
-  curl https://github.com/GoogleChrome/lighthouse/pulls > pulls.html
+cd "$LH_PATH" || exit 1
+yarn install || exit 1
+
+# If `pulls.report.html` is more than 30 minutes old or not there, fetch a new one
+if ! [ -e pulls.report.html ] || test `find pulls.report.html -mmin +30`; then
+  curl https://github.com/GoogleChrome/lighthouse/pulls > pulls.report.html
 fi
 
-PULL_IDS=$(grep 'pull.[0-9]' pulls.html | sed -e 's/.*pull.\([0-9]\+\).*/\1/g' | uniq)
+PULL_IDS=$(grep 'pull.[0-9]' pulls.report.html | sed -e 's/.*pull.\([0-9]\+\).*/\1/g' | uniq)
 
 for pullid in $PULL_IDS; do
+  cd "$LH_PATH" || exit 1
+
   # For some reason, very important to git that this is not quoted below
   git fetch origin pull/$pullid/head:branch$pullid
 
@@ -25,24 +32,23 @@ for pullid in $PULL_IDS; do
     git checkout -f "branch$pullid"
     export LH_HASH=$(git rev-parse HEAD)
 
-    if grep -q "$LH_HASH" "last-processed-hash-$pullid.report.json"; then
+    if grep -q "$LH_HASH" "last-processed-hash-branch-$pullid.artifacts.log"; then
       echo "Hash has not changed since last processing, skipping..."
       continue
     fi
 
     cd "$DZL_PATH" || exit 1
 
-    node ./bin/dzl.js collect --limit=1 --label="branch-$pullid" --hash="$LH_HASH" --concurrency=1 --config=./agent.branch.config.js
+    node ./bin/dzl.js collect --limit=1 --label="branch-$pullid" --hash="$LH_HASH" --concurrency=1 --config=$DZL_CONFIG_FILE
     DZL_EXIT_CODE=$?
 
     if [ $DZL_EXIT_CODE -eq 0 ]; then
       echo "Success!"
-      echo "$LH_HASH" > "$LH_PATH/last-processed-hash-$pullid.report.json"
+      echo "$LH_HASH" > "$LH_PATH/last-processed-hash-branch-$pullid.artifacts.log"
     else
       echo "Failed, exiting with error code 1"
       exit 1
     fi
-
   else
     echo "PR #$pullid makes no mention of DZL, skipping..."
   fi

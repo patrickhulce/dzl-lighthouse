@@ -1,7 +1,7 @@
 #!/bin/bash
 
-export DZL_PATH="$HOME/dzl"
-# cd "$DZL_PATH" || exit 1
+export DZL_PATH="/dzl/src/dzl"
+cd "$DZL_PATH" || exit 1
 
 nohup node ./bin/dzl.js serve &
 SERVER_PID=$!
@@ -28,10 +28,11 @@ curl http://localhost:8088/by-url.js > dist/by-url.js
 curl http://localhost:8088/comparison.js > dist/comparison.js
 curl http://localhost:8088/dashboard.js > dist/dashboard.js
 
+kill $SERVER_PID
+
 echo "lh-dzl-${PR_ID:-master}.surge.sh" > dist/CNAME
 
 if which surge; then
   cd dist && surge .
 fi
 
-kill $SERVER_PID

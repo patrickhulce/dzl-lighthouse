@@ -3,6 +3,5 @@ node_modules/
 dist/
 
 nohup.out
-*.config.js
 *.sql
 *.retry

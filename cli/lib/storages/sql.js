@@ -46,7 +46,9 @@ async function build(storageOptions) {
     storageOptions.database,
     storageOptions.user,
     storageOptions.password,
-    {dialect: 'sqlite', storage: storageOptions.path},
+    storageOptions.path
+      ? {dialect: 'sqlite', storage: storageOptions.path}
+      : {dialect: 'mysql', host: storageOptions.host},
   )
 
   const DataPoint = sequelize.define(...dataPointModel)
@@ -68,7 +70,9 @@ module.exports = {
   dataPointModel,
   defaults: {
     host: 'localhost',
-    database: 'dzl-lighthouse',
+    database: 'dzl_lighthouse',
+    user: 'dzl',
+    password: 'lighthouse',
   },
   async run(lhrs, {batchId, label, hash, storageOptions}) {
     const {DataPoint} = await build(storageOptions)
