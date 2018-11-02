@@ -104,6 +104,9 @@ module.exports = {
       }
     }
 
-    await DataPoint.bulkCreate(rows)
+    const batches = _.chunk(rows, 20)
+    for (const batch of batches) {
+      await DataPoint.bulkCreate(batch)
+    }
   },
 }

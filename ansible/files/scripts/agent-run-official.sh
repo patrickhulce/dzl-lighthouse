@@ -6,6 +6,11 @@ export DISPLAY=:99.0
 export CHROME_PATH="$(which google-chrome-stable)"
 export DZL_CONFIG_FILE="/dzl/conf/agent-official.config.js"
 
+if [ -e /dzl/log/dzl-off ]; then
+  echo "DZL is off, remove /dzl/log/dzl-off to turn back on."
+  exit 1
+fi
+
 xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 
 cd "$LH_PATH" || exit 1
