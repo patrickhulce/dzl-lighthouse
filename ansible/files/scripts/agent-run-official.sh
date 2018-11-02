@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export LH_PATH="/dzl/src/lighthouse"
-export DZL_PATH="/dzl/src/dzl"
+export DZL_PATH="/dzl/src/dzl/cli"
 export DISPLAY=:99.0
 export CHROME_PATH="$(which google-chrome-stable)"
 export DZL_CONFIG_FILE="/dzl/conf/agent-official.config.js"

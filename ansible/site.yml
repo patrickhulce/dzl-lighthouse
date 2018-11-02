@@ -1,12 +1,10 @@
 - hosts: all
   become: yes
-  become_user: dzl
+  become_user: root
   tasks:
     - name: add dzl group
-      become_user: root
       group: name=dzl
     - name: allow 'dzl' group to have passwordless sudo
-      become_user: root
       lineinfile:
         dest: /etc/sudoers
         state: present
@@ -14,15 +12,12 @@
         line: '%dzl ALL=(ALL) NOPASSWD: ALL'
         validate: 'visudo -cf %s'
     - name: add dzl user
-      become_user: root
       user: name=dzl group=dzl append=yes shell=/bin/bash createhome=yes
     - name: add public key for ssh as dzl
-      become_user: root
       authorized_key: user=dzl key='{{ item }}'
       with_file:
         - public_keys/patrick
     - name: make /dzl directory
-      become_user: root
       file: path='/dzl/{{ item }}' state=directory owner=dzl group=dzl mode=0755
       with_items:
         - src
@@ -30,19 +25,14 @@
         - log
         - scripts
     - name: add node apt key
-      become_user: root
       apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
     - name: add node apt repo
-      become_user: root
       apt_repository: repo='deb https://deb.nodesource.com/node_8.x bionic main' state=present filename=nodejs update_cache=yes
     - name: add chrome apt key
-      become_user: root
       apt_key: url=https://dl-ssl.google.com/linux/linux_signing_key.pub state=present
     - name: add chrome apt repo
-      become_user: root
       apt_repository: repo='deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main' state=present filename=google-chrome update_cache=yes
     - name: install dependencies
-      become_user: root
       apt:
         pkg: '{{ packages }}'
         state: present
@@ -56,6 +46,10 @@
       become_user: root
       npm: name='{{ item }}' global=yes
       with_items: [yarn, surge]
+- hosts: all
+  become: yes
+  become_user: dzl
+  tasks:
     - name: setup LH repo
       git: repo=https://github.com/GoogleChrome/lighthouse.git dest=/dzl/src/lighthouse
     - name: setup DZL repo
@@ -100,4 +94,4 @@
     - name: create mysql db
       mysql_db: name=dzl_lighthouse state=present login_user=dzl login_password=lighthouse
     - name: setup cron job for agent-run-official
-      cron: name='dzl official' user=dzl job='/usr/bin/flock -n /dzl/log/official.lockfile /dzl/scripts/agent-run-official.sh &>> /dzl/log/official.log'
+      cron: name='dzl official' user=dzl job='/usr/bin/flock -n /dzl/log/official.lockfile /dzl/scripts/agent-run-official.sh >> /dzl/log/official.log 2>&1'

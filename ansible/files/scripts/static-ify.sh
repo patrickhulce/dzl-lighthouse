@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export DZL_PATH="/dzl/src/dzl"
+export DZL_PATH="/dzl/src/dzl/cli"
 cd "$DZL_PATH" || exit 1
 
 nohup node ./bin/dzl.js serve &
