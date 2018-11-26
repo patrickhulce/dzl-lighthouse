@@ -65,3 +65,5 @@ for pullid in $PULL_IDS; do
     exit 1
   fi
 done
+
+echo "Done with all PR checks!"
