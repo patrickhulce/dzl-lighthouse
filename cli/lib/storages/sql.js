@@ -51,7 +51,7 @@ const rawModel = [
   'lhrs',
   {
     ...sharedAttributes,
-    lhr: Sequelize.TEXT,
+    lhr: Sequelize.TEXT('long'),
   },
   {
     indexes: [...sharedIndexes].map(o => ({...o, name: `lhrs_${o.name}`})),
@@ -137,6 +137,10 @@ module.exports = {
       await DataPoint.bulkCreate(batch)
     }
 
-    await LHR.bulkCreate(lhrRows)
+    try {
+      await LHR.bulkCreate(lhrRows)
+    } catch (err) {
+      console.error(err.message.slice(0, 200))
+    }
   },
 }
