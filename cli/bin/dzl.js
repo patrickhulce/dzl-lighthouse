@@ -108,6 +108,7 @@ async function run() {
   switch (args._[0]) {
     case 'collect':
       await collect()
+      process.exit(0)
       break
     case 'serve':
       await serve()

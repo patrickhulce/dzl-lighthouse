@@ -11,6 +11,13 @@ if [ -e /dzl/log/dzl-off ]; then
   exit 1
 fi
 
+if [ -e /dzl/conf/gh-token.sh ]; then
+  source /dzl/conf/gh-token.sh
+  echo "GH Token is $(echo $GH_TOKEN | head -c 4)..."
+else
+  echo "No GH Token is set, comments will not be posted."
+fi
+
 xdpyinfo -display $DISPLAY > /dev/null || Xvfb $DISPLAY -screen 0 1024x768x16 &
 
 cd "$DZL_PATH" || exit 1
@@ -60,6 +67,15 @@ for pullid in $PULL_IDS; do
   if [ $DZL_EXIT_CODE -eq 0 ]; then
     echo "Success!"
     echo "$LH_HASH" > "$LH_PATH/last-processed-hash-branch-$pullid.artifacts.log"
+
+    if [[ -n $GH_TOKEN ]]; then
+      curl -H "Authorization: token $GH_TOKEN" \
+        -H "Content-Type: application/json" \
+        -H "Accept: application/vnd.github.v3+json" \
+        -X POST \
+        https://api.github.com/repos/patrickhulce/saas-starter-kit/issues/33/comments \
+        --data "{\"body\": \"DZL is done! Go check it https://url-tbd.com/compare?branch-$pullid\"}" || exit 1
+    fi
   else
     echo "Failed, exiting with error code 1"
     exit 1
