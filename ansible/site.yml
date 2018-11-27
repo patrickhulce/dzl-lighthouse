@@ -68,6 +68,7 @@
       with_items:
         - conf/agent-official.config.js
         - conf/agent-branch.config.js
+        - conf/agent-psi.config.js
     - name: setup cron job for lighthouse static server
       cron: name='lh static server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-static-server node /dzl/src/lighthouse/lighthouse-cli/test/fixtures/static-server.js'
 - hosts: masters
@@ -131,6 +132,8 @@
       mysql_db: name=dzl_lighthouse state=present login_user=dzl login_password=lighthouse
     - name: setup cron job for dzl server
       cron: name='dzl server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-server /dzl/src/dzl/cli/bin/dzl.js serve --config /dzl/conf/agent-official.config.js >> /dzl/log/server.log 2>&1'
+    - name: setup cron job for agent-run-psi
+      cron: name='dzl PSI' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-psi /dzl/scripts/agent-run-psi.sh >> /dzl/log/psi.log 2>&1'
 - hosts: official_workers
   become: yes
   become_user: dzl
