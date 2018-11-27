@@ -49,7 +49,13 @@ for pullid in $PULL_IDS; do
   fi
 
   PR_HTML_FILE="pull-$pullid.report.html"
-  curl https://github.com/GoogleChrome/lighthouse/pull/$pullid > $PR_HTML_FILE
+
+  # If `$PR_HTML_FILE` is more than 10 minutes old or not there, fetch a new one
+  if ! [ -e $PR_HTML_FILE ] || test `find $PR_HTML_FILE -mmin +10`; then
+    curl https://github.com/GoogleChrome/lighthouse/pull/$pullid > $PR_HTML_FILE
+  else
+    echo "PR file is pretty recent, won't fetch a new one just yet..."
+  fi
 
   if ! grep 'DZL, do a barrel roll' $PR_HTML_FILE ; then
     echo "PR #$pullid makes no mention of DZL, skipping..."
@@ -68,13 +74,16 @@ for pullid in $PULL_IDS; do
     echo "Success!"
     echo "$LH_HASH" > "$LH_PATH/last-processed-hash-branch-$pullid.artifacts.log"
 
+    export PR_ID="$pullid"
+    /dzl/scripts/static-ify.sh || exit 1
+
     if [[ -n $GH_TOKEN ]]; then
       curl -H "Authorization: token $GH_TOKEN" \
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.github.v3+json" \
         -X POST \
         https://api.github.com/repos/GoogleChrome/lighthouse/issues/$pullid/comments \
-        --data "{\"body\": \"DZL is done! Go check it out https://dzl.patrickhulce.com/dashboard-comparison?comparison=branch-$pullid\"}" || exit 1
+        --data "{\"body\": \"DZL is done! Go check it out http://lh-dzl-$pullid.surge.sh\"}" || exit 1
     fi
   else
     echo "Failed, exiting with error code 1"
