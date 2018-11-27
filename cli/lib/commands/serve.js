@@ -37,7 +37,7 @@ module.exports = async function serve(args) {
   app.get('/dashboard-data.json', async (req, res) => {
     async function getBatchIDs(where) {
       const limit = req.query.limit || 8
-      const attrs = ['batchId']
+      const attrs = ['batchId', 'batchTime']
       const response = await DataPoint.findAll({
         where,
         limit,
