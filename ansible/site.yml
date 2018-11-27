@@ -76,7 +76,7 @@
   tasks:
     - name: install dependencies
       become_user: root
-      register: mysqlapt
+      register: masterdeps
       apt:
         pkg: '{{ packages }}'
         state: present
@@ -85,17 +85,34 @@
         packages:
           - python3-mysqldb # required for mysql_user module to work
           - mysql-server
+          - nginx
+    - name: setup nginx site
+      become_user: root
+      register: nginxconf
+      template:
+        src: templates/conf/dzl.patrickhulce.com.conf
+        dest: /etc/nginx/sites-available/dzl.patrickhulce.com
+    - name: enable nginx site
+      become_user: root
+      file:
+        src: /etc/nginx/sites-available/dzl.patrickhulce.com
+        dest: /etc/nginx/sites-enabled/dzl.patrickhulce.com
+        state: link
+    - name: restart the nginx service
+      become_user: root
+      service: name=nginx state=restarted enabled=yes
+      when: masterdeps.changed or nginxconf.changed
     - name: listen to mysql on all interfaces
       become_user: root
       register: mysqlcnf
       lineinfile:
         path: /etc/mysql/mysql.conf.d/mysqld.cnf
         regexp: '^bind-address'
-        line: 'bind-address            = 0.0.0.0'
+        line: 'bind-address            = 0.0.0.0' # GCloud firewall makes this OK
     - name: restart the mysql service
       become_user: root
       service: name=mysql state=restarted enabled=yes
-      when: mysqlapt.changed or mysqlcnf.changed
+      when: masterdeps.changed or mysqlcnf.changed
     - name: create mysql user
       become_user: root
       mysql_user:
@@ -109,6 +126,7 @@
         - 127.0.0.1
         - ::1
         - localhost
+        - '%'
     - name: create mysql db
       mysql_db: name=dzl_lighthouse state=present login_user=dzl login_password=lighthouse
     - name: setup cron job for agent-run-official
