@@ -88,6 +88,7 @@ async function collect() {
   await commands.collect(args)
 
   if (spawnExtraChildren) {
+    // TODO: add concurrentChildren and make this async
     for (let i = 1; i < Math.ceil(allURLs.length / args.limit); i++) {
       const nextStartAt = args.limit * i
       console.log('Running', nextStartAt, 'to', nextStartAt + args.limit, 'in child process')
