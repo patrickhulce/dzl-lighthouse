@@ -129,7 +129,7 @@ module.exports = {
         dataPoints.push({...baseRow, name: `audit-score-${id}`, value, type: 'audit-score'})
       }
 
-      lhrRows.push({...baseRow, lhr: JSON.stringify(lhr)})
+      lhrRows.push({...baseRow, lhr: JSON.stringify(lhr).replace(/[^\x00-\x7F]/g, '')})
     }
 
     const dpBatches = _.chunk(dataPoints, 100)
