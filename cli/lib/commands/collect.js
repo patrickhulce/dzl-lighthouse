@@ -63,6 +63,7 @@ module.exports = async function collect(args) {
           lhr = await collector.run({url, ...options})
         }
 
+        await collector.afterEach()
         return pruneLHR(lhr)
       },
       {concurrency: args.concurrency},

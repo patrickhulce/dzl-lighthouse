@@ -47,4 +47,5 @@ module.exports = {
 
     return JSON.parse(results.stdout)
   },
+  afterEach() {},
 }

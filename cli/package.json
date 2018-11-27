@@ -16,6 +16,7 @@
     "execa": "^1.0.0",
     "express": "^4.16.4",
     "influx": "^5.0.7",
+    "isomorphic-fetch": "^2.2.1",
     "lodash": "^4.17.11",
     "mysql2": "^1.6.1",
     "sequelize": "^4.39.1",
