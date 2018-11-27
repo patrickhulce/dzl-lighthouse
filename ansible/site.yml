@@ -131,6 +131,8 @@
       mysql_db: name=dzl_lighthouse state=present login_user=dzl login_password=lighthouse
     - name: setup cron job for agent-run-official
       cron: name='dzl official' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-official /dzl/scripts/agent-run-official.sh >> /dzl/log/official.log 2>&1'
+    - name: setup cron job for dzl server
+      cron: name='dzl server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-server /dzl/src/dzl/cli/bin/dzl.js serve --config /dzl/conf/agent-official.config.js >> /dzl/log/server.log 2>&1'
 - hosts: workers
   become: yes
   become_user: dzl

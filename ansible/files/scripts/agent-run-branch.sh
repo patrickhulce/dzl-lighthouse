@@ -73,8 +73,8 @@ for pullid in $PULL_IDS; do
         -H "Content-Type: application/json" \
         -H "Accept: application/vnd.github.v3+json" \
         -X POST \
-        https://api.github.com/repos/patrickhulce/saas-starter-kit/issues/33/comments \
-        --data "{\"body\": \"DZL is done! Go check it https://url-tbd.com/compare?branch-$pullid\"}" || exit 1
+        https://api.github.com/repos/GoogleChrome/lighthouse/issues/$pullid/comments \
+        --data "{\"body\": \"DZL is done! Go check it out https://dzl.patrickhulce.com/dashboard-comparison?comparison=branch-$pullid\"}" || exit 1
     fi
   else
     echo "Failed, exiting with error code 1"
