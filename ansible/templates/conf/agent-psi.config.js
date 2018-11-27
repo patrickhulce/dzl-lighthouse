@@ -7,10 +7,6 @@ module.exports = {
   collection: {
     runs: 25,
     urls: [
-      'http://localhost:10200/online-only.html',
-      'http://localhost:10200/perf/fonts.html',
-      'http://localhost:10200/byte-efficiency/tester.html',
-      'http://localhost:10200/a11y/a11y_tester.html',
       'https://example.com',
       'https://www.sfgate.com',
       'https://www.theverge.com',
