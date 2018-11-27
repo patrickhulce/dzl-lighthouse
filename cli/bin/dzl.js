@@ -2,8 +2,9 @@
 
 const path = require('path')
 const yargs = require('yargs')
-const execFileSync = require('child_process').execFileSync
+const execa = require('execa')
 const commands = require('../lib/commands')
+const Promise = require('bluebird')
 
 const args = yargs
   .command('collect', 'run Lighthouse to collect data', {
@@ -29,6 +30,10 @@ const args = yargs
     concurrency: {
       type: 'number',
       default: 2,
+    },
+    childProcessConcurrency: {
+      type: 'number',
+      default: 1,
     },
     skipSetup: {
       type: 'boolean',
@@ -85,18 +90,28 @@ async function collect() {
   const spawnExtraChildren = runURLs.length > args.limit && startAt === 0
 
   args.config.collection.urls = runURLs.slice(0, args.limit)
-  await commands.collect(args)
+  const collectionPromise = commands.collect(args)
 
   if (spawnExtraChildren) {
-    // TODO: add concurrentChildren and make this async
-    for (let i = 1; i < Math.ceil(allURLs.length / args.limit); i++) {
-      const nextStartAt = args.limit * i
-      console.log('Running', nextStartAt, 'to', nextStartAt + args.limit, 'in child process')
-      const mappedArgs = replaceStartAt(process.argv.slice(1), nextStartAt)
-      mappedArgs.push('--batchId', args.batchId)
-      execFileSync(process.argv[0], mappedArgs, {stdio: 'inherit'})
-    }
+    const startAtIndexes = []
+    for (let i = 0; i < Math.ceil(allURLs.length / args.limit); i++)
+      startAtIndexes.push(i * args.limit)
+
+    await Promise.map(
+      startAtIndexes,
+      async startAtIndex => {
+        if (startAtIndex === 0) return collectionPromise
+
+        console.log('Running', startAtIndex, 'to', startAtIndex + args.limit, 'in child process')
+        const mappedArgs = replaceStartAt(process.argv.slice(1), startAtIndex)
+        mappedArgs.push('--batchId', args.batchId)
+        await execa(process.argv[0], mappedArgs, {stdio: 'inherit'})
+      },
+      {concurrency: args.childProcessConcurrency},
+    )
   }
+
+  await collectionPromise
 }
 
 async function serve() {
