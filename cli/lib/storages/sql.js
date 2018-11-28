@@ -130,6 +130,10 @@ module.exports = {
       }
 
       lhrRows.push({...baseRow, lhr: JSON.stringify(lhr).replace(/[^\x00-\x7F]/g, '')})
+
+      for (const row of dataPoints) {
+        if (!Number.isFinite(row.value)) row.value = undefined
+      }
     }
 
     const dpBatches = _.chunk(dataPoints, 100)
