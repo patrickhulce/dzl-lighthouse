@@ -107,7 +107,8 @@ module.exports = {
       const baseRow = {url, runId, batchId, batchTime, label, hash}
 
       for (const name of METRICS) {
-        const value = lhr.audits[name].rawValue
+        let value = lhr.audits[name].rawValue
+        if (!value) value = _.get(lhr.audits.metrics, ['details', 'items', '0', _.camelCase(name)])
         dataPoints.push({...baseRow, name, value, type: 'metric'})
       }
 
