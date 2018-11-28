@@ -13,12 +13,24 @@ fi
 rm -rf dist/
 mkdir dist/
 
-QS="label=official-continuous"
+LABEL=${LABEL:-official-ci}
+WEBPAGE_ID=${PR_ID:-master}
+QS="label=$LABEL"
 
 if [[ -n "${PR_ID}" ]]; then
   QS="${QS}&comparison=branch-$PR_ID"
 fi
 
+if [[ "${LABEL}" == "official-continuous" ]]; then
+  WEBPAGE_ID="continuous"
+fi
+
+if [[ "${LABEL}" == "official-psi" ]]; then
+  WEBPAGE_ID="psi"
+fi
+
+echo "Label is $LABEL"
+echo "Webpage ID is $WEBPAGE_ID"
 echo "Query string is $QS"
 
 curl http://localhost:8088/ > dist/index.html
@@ -36,7 +48,7 @@ if [[ -n $SERVER_PID ]]; then
   kill $SERVER_PID
 fi
 
-echo "lh-dzl-${PR_ID:-master}.surge.sh" > dist/CNAME
+echo "lh-dzl-${WEBPAGE_ID}.surge.sh" > dist/CNAME
 
 if which surge; then
   surge ./dist
