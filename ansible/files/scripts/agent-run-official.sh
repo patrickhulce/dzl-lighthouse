@@ -38,6 +38,9 @@ DZL_EXIT_CODE=$?
 if [ $DZL_EXIT_CODE -eq 0 ]; then
   echo "Success!"
   echo "$LH_HASH" > "$LH_PATH/last-processed-hash-official.artifacts.log"
+  export LABEL="$LABEL_PREFIX"
+  /dzl/scripts/static-ify.sh || exit 1
+  exit 0
 else
   echo "Failed, exiting with error code 1"
   exit 1

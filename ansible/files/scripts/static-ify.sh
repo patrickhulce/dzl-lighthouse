@@ -1,11 +1,14 @@
 #!/bin/bash
 
+echo "Running static-ify and deploy script..."
+
 export DZL_PATH="/dzl/src/dzl/cli"
 cd "$DZL_PATH" || exit 1
 
 if nc -z 127.0.0.1 8088 ; then
   echo "Server is already up, skipping..."
 else
+  echo "Starting up DZL serve..."
   nohup node ./bin/dzl.js serve --config=/dzl/conf/agent-official.config.js &
   SERVER_PID=$!
 fi
@@ -44,7 +47,7 @@ curl http://localhost:8088/by-url.js > dist/by-url.js
 curl http://localhost:8088/comparison.js > dist/comparison.js
 curl http://localhost:8088/dashboard.js > dist/dashboard.js
 
-if [[ -n $SERVER_PID ]]; then
+if [[ -n "$SERVER_PID" ]]; then
   kill $SERVER_PID
 fi
 
@@ -52,5 +55,6 @@ echo "lh-dzl-${WEBPAGE_ID}.surge.sh" > dist/CNAME
 
 if which surge; then
   surge ./dist
+  echo "Deployed!"
 fi
 

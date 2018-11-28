@@ -92,3 +92,4 @@ for pullid in $PULL_IDS; do
 done
 
 echo "Done with all PR checks!"
+exit 0

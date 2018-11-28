@@ -31,6 +31,9 @@ DZL_EXIT_CODE=$?
 
 if [ $DZL_EXIT_CODE -eq 0 ]; then
   echo "Success!"
+  export LABEL="official-psi"
+  /dzl/scripts/static-ify.sh || exit 1
+  exit 0
 else
   echo "Failed, exiting with error code 1"
   exit 1
