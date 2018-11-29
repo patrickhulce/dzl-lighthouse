@@ -31,6 +31,11 @@ const sharedIndexes = [
     method: 'BTREE',
     fields: ['label', 'url'],
   },
+  {
+    name: 'label_batch',
+    method: 'BTREE',
+    fields: ['label', 'batchTime', 'batchId'],
+  },
 ]
 
 const dataPointModel = [
@@ -43,7 +48,14 @@ const dataPointModel = [
     value: Sequelize.DOUBLE(12, 4),
   },
   {
-    indexes: [...sharedIndexes],
+    indexes: [
+      ...sharedIndexes,
+      {
+        name: 'label_type_batch_name',
+        method: 'BTREE',
+        fields: ['label', 'type', 'batchId', 'name'],
+      },
+    ],
   },
 ]
 
@@ -59,7 +71,7 @@ const rawModel = [
 ]
 
 async function build(storageOptions) {
-  const logging = msg => console.log(msg.slice(0, 240))
+  const logging = msg => console.log(msg.slice(0, 500))
   const sequelize = new Sequelize(
     storageOptions.database,
     storageOptions.user,
