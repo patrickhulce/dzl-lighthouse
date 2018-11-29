@@ -94,9 +94,7 @@ module.exports = async function serve(args) {
 
     if (req.query.comparison) {
       where.label = {$or: [where.label, req.query.comparison]}
-      batchIds = batchIds.concat(
-        await getBatchIDs({...where, label: req.query.comparison, limit: 4}),
-      )
+      batchIds = batchIds.concat(await getBatchIDs({...where, label: req.query.comparison}))
     }
 
     console.log('Found batchIds', batchIds)
