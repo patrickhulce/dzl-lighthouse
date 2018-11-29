@@ -5,6 +5,8 @@ const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
 const storage = require(`../storages/sql`)
+const Sequelize = require('sequelize')
+const Promise = require('bluebird')
 
 const readFile = util.promisify(fs.readFile)
 const staticDir = path.join(__dirname, '../www')
@@ -36,30 +38,32 @@ module.exports = async function serve(args) {
 
   app.get('/dashboard-data.json', async (req, res) => {
     async function getBatchIDs(where) {
-      const limit = req.query.limit || 8
-      const attrs = ['batchId', 'batchTime']
       const response = await DataPoint.findAll({
         where,
-        limit,
-        attributes: attrs,
-        group: attrs,
-        order: [['batchTime', 'DESC']],
+        attributes: ['batchId', [Sequelize.fn('max', Sequelize.col('batchTime')), 'batchTime']],
+        group: ['batchId'],
       })
 
-      return response.map(item => item.batchId)
+      return response
+        .sort((itemA, itemB) => itemB.batchTime.getTime() - itemA.batchTime.getTime())
+        .slice(0, req.query.limit || 8)
+        .map(item => item.batchId)
     }
 
     async function getBatchData(where) {
       const metadataAttrs = ['batchId', 'hash', 'label']
-      const [metadata, data] = await Promise.all([
+      const [metadata, ...data] = await Promise.all([
         DataPoint.findAll({where, attributes: metadataAttrs, group: metadataAttrs}),
-        DataPoint.findAll({
-          where,
-          attributes: ['name', 'value', 'url', 'batchId'],
+        ...where.batchId['$in'].map(batchId => {
+          return DataPoint.findAll({
+            where: {...where, batchId},
+            attributes: ['name', 'value', 'url', 'batchId'],
+          })
         }),
       ])
 
       const groups = _(data)
+        .flatten()
         .groupBy('batchId')
         .mapValues((values, batchId) => {
           const dataByURL = _(values)
@@ -83,14 +87,19 @@ module.exports = async function serve(args) {
 
     const where = {
       label: req.query.label || 'official-ci',
-      type: {$ne: 'timing-breakdown'},
+      type: {$notIn: ['timing-breakdown', 'audit-score']},
     }
+
+    let batchIds = await getBatchIDs(where)
 
     if (req.query.comparison) {
       where.label = {$or: [where.label, req.query.comparison]}
+      batchIds = batchIds.concat(
+        await getBatchIDs({...where, label: req.query.comparison, limit: 4}),
+      )
     }
 
-    const batchIds = await getBatchIDs(where)
+    console.log('Found batchIds', batchIds)
     res.json(await getBatchData({...where, batchId: {$in: batchIds}}))
   })
 
