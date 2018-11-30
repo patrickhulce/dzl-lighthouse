@@ -118,6 +118,7 @@
       for (const [url, properties] of Object.entries(batch)) {
         const urlData = {...batchData, url, properties}
         if (where && !where(urlData)) continue
+        if (!properties[prop]) continue
 
         const urlValues = properties[prop]
         onURL(urlValues, urlData)
@@ -192,7 +193,7 @@
     iterateData(prop, {where: opts.whereA, onURL: (values, {url}) => valuesA.push({values, url})})
     iterateData(prop, {where: opts.whereB, onURL: (values, {url}) => valuesB.push({values, url})})
 
-    if (!valuesA.length || !valuesB.length) return NaN
+    if (!valuesA.length || !valuesB.length) return {value: NaN, statsA: [], statsB: []}
 
     const valuesAByURL = _(valuesA)
       .groupBy('url')

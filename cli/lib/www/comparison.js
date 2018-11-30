@@ -92,6 +92,9 @@
     whereA,
     whereB,
   }) {
+    const title = metric.includes('audit-score')
+      ? `${url} - ${_.startCase(metric.replace('audit-score-', ''))}`
+      : url
     const cleanURL = url.replace(/[^a-z]+/gi, '')
     const domID = `${cleanURL}-${metric}`
     const boxWhere = o => whereA(o) || whereB(o)
@@ -112,7 +115,7 @@
       histogramEl.id,
       () => histogramDataA.concat(histogramDataB),
       {
-        title: url,
+        title,
         xaxis: {ticksuffix: getMetricSuffix(metric)},
       },
     ])
@@ -123,7 +126,7 @@
       boxEl.id,
       () => boxAndWhiskerData,
       {
-        title: url,
+        title,
         yaxis: {ticksuffix: getMetricSuffix(boxMetric), range: [0, Math.max(max + 2, 5)]},
         xaxis: {
           zeroline: false,
@@ -184,10 +187,10 @@
       if (/^audit-scores/.test(activeMetric)) {
         for (const metricName of Object.keys(urlData)) {
           // Look at the mean of all the audits
-          if (!/audit-score.*-mean/.test(metricName)) continue
-
-          const {statsA, statsB} = getPValue(metricName, {whereA, whereB})
-          if (statsA[0][1].variance === 0 && statsB[0][1].variance === 0) continue
+          if (!/^audit-score.*-mean$/.test(metricName)) continue
+          const {value, statsA, statsB} = getPValue(metricName, {whereA, whereB})
+          if (!statsA.length || !statsB.length) continue
+          if (statsA[0][1].variance === 0 && statsB[0][1].variance === 0 && value === 100) continue
 
           convertMetricToGraphsAndTiles({...renderData, metric: metricName})
         }
