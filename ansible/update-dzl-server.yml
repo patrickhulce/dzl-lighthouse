@@ -1,0 +1,16 @@
+- hosts: masters
+  become: yes
+  become_user: dzl
+  tasks:
+    - name: update DZL repo
+      shell: git pull
+      args:
+        chdir: /dzl/src/dzl
+    - name: kill DZL serve jobs
+      ignore_errors: yes
+      shell: |
+        for pid in $(ps aux | grep 'bin/dzl.js' | grep serve | awk '{ print $2 }'); do
+          kill $pid;
+        done
+
+        exit 0
