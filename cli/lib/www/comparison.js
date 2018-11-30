@@ -196,9 +196,9 @@
       }
     }
 
-    render({graphs, tiles})
     renderEnvironment({id: 'environment-a', batchId: batchIdA})
     renderEnvironment({id: 'environment-b', batchId: batchIdB})
+    render({graphs, tiles})
   }
 
   renderWithBatches(batchIdA, batchIdB)

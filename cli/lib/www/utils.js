@@ -248,14 +248,19 @@
     `
   }
 
-  function render({graphs = [], tiles = []}) {
+  function asyncNewPlot(...plotlyArgs) {
+    return new Promise(resolve => {
+      window.requestAnimationFrame(() => {
+        Plotly.newPlot(...plotlyArgs)
+        resolve()
+      })
+    })
+  }
+
+  async function render({graphs = [], tiles = []}) {
     const layout = {
       showlegend: false,
       margin: {pad: 5},
-    }
-
-    for (const [domId, dataFn, layoutOverrides] of graphs) {
-      Plotly.newPlot(domId, dataFn(), _.merge(_.cloneDeep(layout), layoutOverrides))
     }
 
     for (const [domId, dataFn, opts] of tiles) {
@@ -289,12 +294,17 @@
     }
 
     renderEnvironment()
+
+    for (const [domId, dataFn, layoutOverrides] of graphs) {
+      await asyncNewPlot(domId, dataFn(), _.merge(_.cloneDeep(layout), layoutOverrides))
+    }
+
     document.body.classList.remove('is-loading')
   }
 
   async function fetchAndRender(opts) {
     await fetchData()
-    render(opts)
+    await render(opts)
   }
 
   Object.assign(utils, {
