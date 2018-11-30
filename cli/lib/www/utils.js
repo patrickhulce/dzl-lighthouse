@@ -56,7 +56,7 @@
     const n = values.length
     const mean = _.sum(values) / n
     const sse = _.sum(values.map(x => Math.pow(x - mean, 2)))
-    const variance = sse / (n - 1)
+    const variance = n === 1 ? 0 : sse / (n - 1)
     const stddev = Math.sqrt(variance)
     return {n, mean, sse, variance, stddev}
   }
@@ -204,6 +204,8 @@
       .value()
 
     const pvalues = {}
+    const statsAByURL = {}
+    const statsBByURL = {}
     for (const [url, urlValuesA] of Object.entries(valuesAByURL)) {
       const urlValuesB = valuesBByURL[url]
 
@@ -212,13 +214,20 @@
 
       const meanDifference = statsA.mean - statsB.mean
       const stddevOfSum = Math.sqrt(statsA.variance + statsB.variance)
-      const z = meanDifference / stddevOfSum
+      const z = stddevOfSum === 0 ? 0 : meanDifference / stddevOfSum
       const percentile = getZPercentile(z)
+      if (!Number.isFinite(percentile)) debugger
       pvalues[url] = Math.min(percentile, 1 - percentile) * 2
+      statsAByURL[url] = statsA
+      statsBByURL[url] = statsB
     }
 
     const minEntry = _.minBy(Object.entries(pvalues), '1')
-    return minEntry[1] * 100
+    return {
+      value: minEntry[1] * 100,
+      statsA: Object.entries(statsAByURL),
+      statsB: Object.entries(statsBByURL),
+    }
   }
 
   function renderEnvironment(opts = {}) {

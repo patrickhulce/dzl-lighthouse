@@ -18,8 +18,12 @@
     'interactive-deltasPercent': ' %',
   }
 
+  function getMetricSuffix(metricName) {
+    return SUFFIX_BY_METRIC[metricName] || ' %'
+  }
+
   const {data, sortedBatchIds} = await fetchData()
-  let metric = 'timing-total'
+  let activeMetric = 'timing-total'
   let batchIdA = _.find(sortedBatchIds, id => id.startsWith('official')) || sortedBatchIds[0]
   let batchIdB = _.find(sortedBatchIds, id => !id.startsWith('official')) || sortedBatchIds[1]
   resetGraphLabels()
@@ -74,9 +78,87 @@
     })
 
     metricSelect.addEventListener('change', () => {
-      metric = metricSelect.value
+      activeMetric = metricSelect.value
       renderWithBatches(batchIdA, batchIdB)
     })
+  }
+
+  function convertMetricToGraphsAndTiles({
+    graphsRootEl,
+    graphs,
+    tiles,
+    metric,
+    url,
+    whereA,
+    whereB,
+  }) {
+    const cleanURL = url.replace(/[^a-z]+/gi, '')
+    const domID = `${cleanURL}-${metric}`
+    const boxWhere = o => whereA(o) || whereB(o)
+    const boxMetric = metric.replace('-deltasPercent', '')
+    const boxAndWhiskerData = getBoxAndWhiskerData(boxMetric, {where: boxWhere})
+    const histogramDataA = getHistogramData(metric, {where: whereA})
+    const histogramDataB = getHistogramData(metric, {where: whereB})
+    if (!histogramDataA.length || !histogramDataB.length) return
+
+    const values = _.flatMap(boxAndWhiskerData, set => set.y)
+    const max = _.max(values)
+
+    const rowEl = createElement(graphsRootEl, 'div', 'row')
+
+    const histogramEl = createElement(rowEl, 'div', 'col-5', 'graph-container')
+    histogramEl.id = `${domID}-hist`
+    graphs.push([
+      histogramEl.id,
+      () => histogramDataA.concat(histogramDataB),
+      {
+        title: url,
+        xaxis: {ticksuffix: getMetricSuffix(metric)},
+      },
+    ])
+
+    const boxEl = createElement(rowEl, 'div', 'col-5', 'graph-container')
+    boxEl.id = `${domID}-box`
+    graphs.push([
+      boxEl.id,
+      () => boxAndWhiskerData,
+      {
+        title: url,
+        yaxis: {ticksuffix: getMetricSuffix(boxMetric), range: [0, Math.max(max + 2, 5)]},
+        xaxis: {
+          zeroline: false,
+          showticklabels: false,
+        },
+      },
+    ])
+
+    const tilesEl = createElement(rowEl, 'div', 'col-2', 'tiles-container')
+    const avgAEl = createElement(tilesEl, 'div', {id: `${domID}-avg-a`, classes: ['tile']})
+    const avgBEl = createElement(tilesEl, 'div', {id: `${domID}-avg-b`, classes: ['tile']})
+    const pvalueAEl = createElement(tilesEl, 'div', {id: `${domID}-pvalue`, classes: ['tile']})
+    tiles.push(
+      [
+        avgAEl.id,
+        () => getAverageValue(metric, {where: whereA}),
+        {title: 'Average A', unit: getMetricSuffix(metric).trim()},
+      ],
+      [
+        avgBEl.id,
+        () => getAverageValue(metric, {where: whereB}),
+        {title: 'Average B', unit: getMetricSuffix(metric).trim()},
+      ],
+      [
+        pvalueAEl.id,
+        () => getPValue(metric, {whereA, whereB}).value,
+        {
+          title: 'P-Value',
+          unit: '%',
+          errorThreshold: 5,
+          warnThreshold: 15,
+          descendingWarn: true,
+        },
+      ],
+    )
   }
 
   function renderWithBatches(batchIdA, batchIdB) {
@@ -92,74 +174,26 @@
       .value()
 
     for (const url of urls) {
-      const cleanURL = url.replace(/[^a-z]+/gi, '')
+      const urlData = data[batchIdA][url]
+      if (!urlData) continue
+
       const whereA = o => o.url === url && o.batchId === batchIdA
       const whereB = o => o.url === url && o.batchId === batchIdB
-      const boxWhere = o => whereA(o) || whereB(o)
-      const boxMetric = metric.replace('-deltasPercent', '')
-      const boxAndWhiskerData = getBoxAndWhiskerData(boxMetric, {where: boxWhere})
-      const histogramDataA = getHistogramData(metric, {where: whereA})
-      const histogramDataB = getHistogramData(metric, {where: whereB})
-      if (!histogramDataA.length || !histogramDataB.length) continue
+      const renderData = {graphs, tiles, url, whereA, whereB, graphsRootEl}
 
-      const values = _.flatMap(boxAndWhiskerData, set => set.y)
-      const max = _.max(values)
+      if (/^audit-scores/.test(activeMetric)) {
+        for (const metricName of Object.keys(urlData)) {
+          // Look at the mean of all the audits
+          if (!/audit-score.*-mean/.test(metricName)) continue
 
-      const rowEl = createElement(graphsRootEl, 'div', 'row')
+          const {statsA, statsB} = getPValue(metricName, {whereA, whereB})
+          if (statsA[0][1].variance === 0 && statsB[0][1].variance === 0) continue
 
-      const histogramEl = createElement(rowEl, 'div', 'col-5', 'graph-container')
-      histogramEl.id = `${cleanURL}-hist`
-      graphs.push([
-        histogramEl.id,
-        () => histogramDataA.concat(histogramDataB),
-        {
-          title: url,
-          xaxis: {ticksuffix: SUFFIX_BY_METRIC[metric]},
-        },
-      ])
-
-      const boxEl = createElement(rowEl, 'div', 'col-5', 'graph-container')
-      boxEl.id = `${cleanURL}-box`
-      graphs.push([
-        boxEl.id,
-        () => boxAndWhiskerData,
-        {
-          title: url,
-          yaxis: {ticksuffix: SUFFIX_BY_METRIC[boxMetric], range: [0, Math.max(max + 2, 5)]},
-          xaxis: {
-            zeroline: false,
-            showticklabels: false,
-          },
-        },
-      ])
-
-      const tilesEl = createElement(rowEl, 'div', 'col-2', 'tiles-container')
-      const avgAEl = createElement(tilesEl, 'div', {id: `${cleanURL}-avg-a`, classes: ['tile']})
-      const avgBEl = createElement(tilesEl, 'div', {id: `${cleanURL}-avg-b`, classes: ['tile']})
-      const pvalueAEl = createElement(tilesEl, 'div', {id: `${cleanURL}-pvalue`, classes: ['tile']})
-      tiles.push(
-        [
-          avgAEl.id,
-          () => getAverageValue(metric, {where: whereA}),
-          {title: 'Average A', unit: SUFFIX_BY_METRIC[metric].trim()},
-        ],
-        [
-          avgBEl.id,
-          () => getAverageValue(metric, {where: whereB}),
-          {title: 'Average B', unit: SUFFIX_BY_METRIC[metric].trim()},
-        ],
-        [
-          pvalueAEl.id,
-          () => getPValue(metric, {whereA, whereB}),
-          {
-            title: 'P-Value',
-            unit: '%',
-            errorThreshold: 5,
-            warnThreshold: 15,
-            descendingWarn: true,
-          },
-        ],
-      )
+          convertMetricToGraphsAndTiles({...renderData, metric: metricName})
+        }
+      } else {
+        convertMetricToGraphsAndTiles({...renderData, metric: activeMetric})
+      }
     }
 
     render({graphs, tiles})
