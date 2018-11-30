@@ -32,9 +32,9 @@ const sharedIndexes = [
     fields: ['label', 'url'],
   },
   {
-    name: 'label_batch',
+    name: 'label_batch_id_time',
     method: 'BTREE',
-    fields: ['label', 'batchTime', 'batchId'],
+    fields: ['label', 'batchId', 'batchTime'],
   },
 ]
 
@@ -51,9 +51,9 @@ const dataPointModel = [
     indexes: [
       ...sharedIndexes,
       {
-        name: 'label_type_batch_name',
+        name: 'data_query',
         method: 'BTREE',
-        fields: ['label', 'type', 'batchId', 'name'],
+        fields: ['batchId', 'type', 'url', 'name', 'value'],
       },
     ],
   },

@@ -39,7 +39,7 @@ module.exports = async function serve(args) {
   app.get('/dashboard-data.json', async (req, res) => {
     async function getBatchIDs(where) {
       const response = await DataPoint.findAll({
-        where,
+        where: {label: where.label},
         attributes: ['batchId', [Sequelize.fn('max', Sequelize.col('batchTime')), 'batchTime']],
         group: ['batchId'],
       })
@@ -56,7 +56,7 @@ module.exports = async function serve(args) {
         DataPoint.findAll({where, attributes: metadataAttrs, group: metadataAttrs}),
         ...where.batchId['$in'].map(batchId => {
           return DataPoint.findAll({
-            where: {...where, batchId},
+            where: _.omit({...where, batchId}, 'label'),
             attributes: ['name', 'value', 'url', 'batchId'],
           })
         }),
