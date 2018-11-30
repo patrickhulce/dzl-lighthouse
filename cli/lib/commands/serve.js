@@ -87,7 +87,7 @@ module.exports = async function serve(args) {
 
     const where = {
       label: req.query.label || 'official-ci',
-      type: {$notIn: ['timing-breakdown', 'audit-score']},
+      type: {$notIn: ['timing-breakdown']},
     }
 
     let batchIds = await getBatchIDs(where)
