@@ -21,7 +21,7 @@ WEBPAGE_ID=${PR_ID:-master}
 QS="label=$LABEL"
 
 if [[ -n "${PR_ID}" ]]; then
-  QS="${QS}&comparison=branch-$PR_ID"
+  QS="${QS}&comparison=branch-$PR_ID&limit=4"
 fi
 
 if [[ "${LABEL}" == "official-continuous" ]]; then

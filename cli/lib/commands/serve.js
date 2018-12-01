@@ -54,11 +54,9 @@ module.exports = async function serve(args) {
       const metadataAttrs = ['batchId', 'hash', 'label']
       const [metadata, ...data] = await Promise.all([
         DataPoint.findAll({where, attributes: metadataAttrs, group: metadataAttrs}),
-        ...where.batchId['$in'].map(batchId => {
-          return DataPoint.findAll({
-            where: _.omit({...where, batchId}, 'label'),
-            attributes: ['name', 'value', 'url', 'batchId'],
-          })
+        DataPoint.findAll({
+          where: _.omit(where, 'label'),
+          attributes: ['name', 'value', 'url', 'batchId'],
         }),
       ])
 
