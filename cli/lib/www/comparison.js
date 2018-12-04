@@ -187,7 +187,7 @@
       if (/^audit-scores/.test(activeMetric)) {
         for (const metricName of Object.keys(urlData)) {
           // Look at the mean of all the audits
-          if (!/^audit-score.*-mean$/.test(metricName)) continue
+          if (!/^audit-score.*$/.test(metricName)) continue
           const {value, statsA, statsB} = getPValue(metricName, {whereA, whereB})
           if (!statsA.length || !statsB.length) continue
           if (statsA[0][1].variance === 0 && statsB[0][1].variance === 0 && value === 100) continue

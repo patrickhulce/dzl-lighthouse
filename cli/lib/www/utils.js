@@ -78,6 +78,7 @@
 
       for (const [url, properties] of Object.entries(batch)) {
         for (let [propertyName, values] of Object.entries(properties)) {
+          if (propertyName.startsWith('audit-score')) continue
           values = values.map(x => x / 1000)
 
           const {stddev, mean} = computeStatistics(values)
@@ -104,7 +105,7 @@
       .value()
 
     currentBatchId = sortedBatchIds[0]
-
+    window.CURRENT_DATA = data
     return {currentBatchId, sortedBatchIds, data}
   }
 
