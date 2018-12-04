@@ -139,6 +139,7 @@
     const avgAEl = createElement(tilesEl, 'div', {id: `${domID}-avg-a`, classes: ['tile']})
     const avgBEl = createElement(tilesEl, 'div', {id: `${domID}-avg-b`, classes: ['tile']})
     const pvalueAEl = createElement(tilesEl, 'div', {id: `${domID}-pvalue`, classes: ['tile']})
+    const pValue = getPValue(metric, {whereA, whereB}).value
     tiles.push(
       [
         avgAEl.id,
@@ -152,8 +153,9 @@
       ],
       [
         pvalueAEl.id,
-        () => getPValue(metric, {whereA, whereB}).value,
+        () => pValue,
         {
+          pValue,
           title: 'P-Value',
           unit: '%',
           errorThreshold: 5,
@@ -162,27 +164,35 @@
         },
       ],
     )
+
+    return true
   }
 
   function renderWithBatches(batchIdA, batchIdB) {
     const graphsRootEl = document.getElementById('graphs')
     graphsRootEl.textContent = ''
 
-    const graphs = []
-    const tiles = []
     const urls = _(data)
       .values()
       .flatMap(o => _.keys(o))
       .uniq()
       .value()
 
+    const renderElements = []
     for (const url of urls) {
       const urlData = data[batchIdA][url]
       if (!urlData) continue
 
       const whereA = o => o.url === url && o.batchId === batchIdA
       const whereB = o => o.url === url && o.batchId === batchIdB
-      const renderData = {graphs, tiles, url, whereA, whereB, graphsRootEl}
+      const renderData = {
+        url,
+        whereA,
+        whereB,
+        graphsRootEl: document.createDocumentFragment(),
+        graphs: [],
+        tiles: [],
+      }
 
       if (/^audit-scores/.test(activeMetric)) {
         for (const metricName of Object.keys(urlData)) {
@@ -193,11 +203,24 @@
           if (statsA[0][1].variance === 0 && statsB[0][1].variance === 0 && value === 100) continue
 
           convertMetricToGraphsAndTiles({...renderData, metric: metricName})
+
+          if (renderData.graphsRootEl.childElementCount) {
+            renderElements.push({...renderData})
+            renderData.graphsRootEl = document.createDocumentFragment()
+            renderData.graphs = []
+            renderData.tiles = []
+          }
         }
       } else {
         convertMetricToGraphsAndTiles({...renderData, metric: activeMetric})
+        if (renderData.graphsRootEl.childElementCount) renderElements.push(renderData)
       }
     }
+
+    const sortedRenderElements = _.sortBy(renderElements, a => a.tiles[2][2].pValue).slice(0, 100)
+    sortedRenderElements.forEach(el => graphsRootEl.appendChild(el.graphsRootEl))
+    const graphs = _.flatMap(sortedRenderElements, 'graphs')
+    const tiles = _.flatMap(sortedRenderElements, 'tiles')
 
     renderEnvironment({id: 'environment-a', batchId: batchIdA})
     renderEnvironment({id: 'environment-b', batchId: batchIdB})
