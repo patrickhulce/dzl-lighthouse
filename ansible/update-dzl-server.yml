@@ -7,10 +7,4 @@
       args:
         chdir: /dzl/src/dzl
     - name: kill DZL serve jobs
-      ignore_errors: yes
-      shell: |
-        for pid in $(ps aux | grep 'bin/dzl.js' | grep serve | awk '{ print $2 }'); do
-          kill $pid;
-        done
-
-        exit 0
+      command: /dzl/scripts/restart-dzl-server.sh
