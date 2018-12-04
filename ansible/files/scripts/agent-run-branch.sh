@@ -39,7 +39,7 @@ for pullid in $PULL_IDS; do
   cd "$LH_PATH" || exit 1
 
   # For some reason, very important to git that this is not quoted below
-  git fetch origin pull/$pullid/head:branch$pullid
+  git fetch origin -f pull/$pullid/head:branch$pullid
   git checkout -f "branch$pullid"
   export LH_HASH=$(git rev-parse HEAD)
 
