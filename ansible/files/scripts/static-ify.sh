@@ -11,6 +11,12 @@ else
   echo "Starting up DZL serve..."
   nohup node ./bin/dzl.js serve --config=/dzl/conf/agent-official.config.js &
   SERVER_PID=$!
+  sleep 10
+fi
+
+if ! nc -z 127.0.0.1 8088 ; then
+  echo "Server did not start in time :("
+  exit 1
 fi
 
 rm -rf dist/
