@@ -78,7 +78,11 @@
 
       for (const [url, properties] of Object.entries(batch)) {
         for (let [propertyName, values] of Object.entries(properties)) {
-          if (propertyName.startsWith('audit-score')) continue
+          if (propertyName.startsWith('audit-score')) {
+            properties[propertyName] = values.map(x => x * 100)
+            continue
+          }
+
           values = values.map(x => x / 1000)
 
           const {stddev, mean} = computeStatistics(values)
@@ -104,7 +108,11 @@
       .reverse()
       .value()
 
-    currentBatchId = sortedBatchIds[0]
+    const nonOfficialBatchIds = sortedBatchIds.filter(
+      batchId => !data[batchId].metadata.label.startsWith('official-'),
+    )
+
+    currentBatchId = nonOfficialBatchIds.length ? nonOfficialBatchIds[0] : sortedBatchIds[0]
     window.CURRENT_DATA = data
     return {currentBatchId, sortedBatchIds, data}
   }

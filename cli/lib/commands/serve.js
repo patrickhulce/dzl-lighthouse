@@ -5,6 +5,7 @@ const path = require('path')
 const express = require('express')
 const bodyParser = require('body-parser')
 const storage = require(`../storages/sql`)
+const fetch = require('isomorphic-fetch')
 const Sequelize = require('sequelize')
 const Promise = require('bluebird')
 
@@ -37,6 +38,12 @@ module.exports = async function serve(args) {
   app.use(express.static(staticDir))
 
   app.get('/dashboard-data.json', async (req, res) => {
+    if (req.query.proxy) {
+      const response = await fetch(`https://dzl.patrickhulce.com${req.originalUrl}`)
+      res.json(await response.json())
+      return
+    }
+
     async function getBatchIDs(where) {
       const response = await DataPoint.findAll({
         where: {label: where.label},
@@ -91,7 +98,7 @@ module.exports = async function serve(args) {
     let batchIds = await getBatchIDs(where)
 
     if (req.query.comparison) {
-      where.label = {$or: [where.label, req.query.comparison]}
+      where.label = {$or: [where.label, req.query.comparison, 'official-ci', 'official-continuous']}
       batchIds = batchIds.concat(await getBatchIDs({...where, label: req.query.comparison}))
     }
 
