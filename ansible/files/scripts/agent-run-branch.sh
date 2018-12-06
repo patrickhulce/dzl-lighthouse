@@ -11,8 +11,8 @@ if [ -e /dzl/log/dzl-off ]; then
   exit 1
 fi
 
-if [ -e /dzl/conf/gh-token.sh ]; then
-  source /dzl/conf/gh-token.sh
+if [ -e /dzl/conf/tokens.sh ]; then
+  source /dzl/conf/tokens.sh
   echo "GH Token is $(echo $GH_TOKEN | head -c 4)..."
 else
   echo "No GH Token is set, comments will not be posted."
