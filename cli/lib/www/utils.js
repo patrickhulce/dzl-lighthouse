@@ -83,6 +83,11 @@
             continue
           }
 
+          if (propertyName.startsWith('timing-')) {
+            properties[propertyName] = values.map(x => x / 1000)
+            continue
+          }
+
           values = values.map(x => x / 1000)
 
           const {stddev, mean} = computeStatistics(values)
@@ -305,9 +310,11 @@
 
     renderEnvironment()
 
+    for (const el of document.querySelectorAll('input, select')) el.disabled = true
     for (const [domId, dataFn, layoutOverrides] of graphs) {
       await asyncNewPlot(domId, dataFn(), _.merge(_.cloneDeep(layout), layoutOverrides))
     }
+    for (const el of document.querySelectorAll('input, select')) el.disabled = false
 
     document.body.classList.remove('is-loading')
   }

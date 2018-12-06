@@ -22,6 +22,7 @@
   }
 
   function getMetricSuffix(metricName) {
+    if (metricName.startsWith('timing')) return ' s'
     return SUFFIX_BY_METRIC[metricName] || ' %'
   }
 
@@ -86,6 +87,13 @@
     })
   }
 
+  function getGraphTitle({url, metric}) {
+    const cleanMetric = _.startCase(metric.replace(/^(audit-score|timing)-/, ''))
+    if (metric.startsWith('audit-score-')) return `${url} - ${cleanMetric}`
+    if (metric.startsWith('timing-')) return `${url} - ${cleanMetric}`
+    return url
+  }
+
   function convertMetricToGraphsAndTiles({
     graphsRootEl,
     graphs,
@@ -95,9 +103,7 @@
     whereA,
     whereB,
   }) {
-    const title = metric.includes('audit-score')
-      ? `${url} - ${_.startCase(metric.replace('audit-score-', ''))}`
-      : url
+    const title = getGraphTitle({url, metric})
     const cleanURL = url.replace(/[^a-z]+/gi, '')
     const domID = `${cleanURL}-${metric}`
     const boxWhere = o => whereA(o) || whereB(o)
@@ -142,23 +148,20 @@
     const avgAEl = createElement(tilesEl, 'div', {id: `${domID}-avg-a`, classes: ['tile']})
     const avgBEl = createElement(tilesEl, 'div', {id: `${domID}-avg-b`, classes: ['tile']})
     const pvalueAEl = createElement(tilesEl, 'div', {id: `${domID}-pvalue`, classes: ['tile']})
+    const aValue = getAverageValue(metric, {where: whereA})
+    const bValue = getAverageValue(metric, {where: whereB})
     const pValue = getPValue(metric, {whereA, whereB}).value
     tiles.push(
-      [
-        avgAEl.id,
-        () => getAverageValue(metric, {where: whereA}),
-        {title: 'Average A', unit: getMetricSuffix(metric).trim()},
-      ],
-      [
-        avgBEl.id,
-        () => getAverageValue(metric, {where: whereB}),
-        {title: 'Average B', unit: getMetricSuffix(metric).trim()},
-      ],
+      [avgAEl.id, () => aValue, {title: 'Average A', unit: getMetricSuffix(metric).trim()}],
+      [avgBEl.id, () => bValue, {title: 'Average B', unit: getMetricSuffix(metric).trim()}],
       [
         pvalueAEl.id,
         () => pValue,
         {
-          pValue,
+          aValue,
+          bValue,
+          pValue: Math.round(pValue),
+          magnitude: Math.abs(aValue - bValue),
           title: 'P-Value',
           unit: '%',
           errorThreshold: 5,
@@ -197,13 +200,16 @@
         tiles: [],
       }
 
-      if (/^audit-scores/.test(activeMetric)) {
+      if (activeMetric === 'audit-scores' || activeMetric === 'timing-breakdowns') {
+        const metricOfInterest = activeMetric === 'audit-scores' ? /^audit-score.*$/ : /^timing-.*$/
         for (const metricName of Object.keys(urlData)) {
-          // Look at the mean of all the audits
-          if (!/^audit-score.*$/.test(metricName)) continue
+          if (!metricOfInterest.test(metricName)) continue
           const {value, statsA, statsB} = getPValue(metricName, {whereA, whereB})
           if (!statsA.length || !statsB.length) continue
+          // Skip it if the dataset has no variance and pvalue of 100
           if (statsA[0][1].variance === 0 && statsB[0][1].variance === 0 && value === 100) continue
+          // Skip it if the values are too small to care
+          if (statsA[0][1].mean < 0.05 && statsB[0][1].mean < 0.05) continue
 
           convertMetricToGraphsAndTiles({...renderData, metric: metricName})
 
@@ -220,7 +226,11 @@
       }
     }
 
-    const sortedRenderElements = _.sortBy(renderElements, a => a.tiles[2][2].pValue).slice(0, 100)
+    const sortedRenderElements = _.orderBy(
+      renderElements,
+      [a => a.tiles[2][2].pValue, a => a.tiles[2][2].magnitude],
+      ['asc', 'desc'],
+    ).slice(0, 50)
     sortedRenderElements.forEach(el => graphsRootEl.appendChild(el.graphsRootEl))
     const graphs = _.flatMap(sortedRenderElements, 'graphs')
     const tiles = _.flatMap(sortedRenderElements, 'tiles')
