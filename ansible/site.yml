@@ -133,7 +133,12 @@
     - name: setup cron job for dzl server
       cron: name='dzl server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-server /dzl/src/dzl/cli/bin/dzl.js serve --config /dzl/conf/agent-official.config.js >> /dzl/log/server.log 2>&1'
     - name: setup cron job for agent-run-psi
-      cron: name='dzl PSI' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-psi /dzl/scripts/agent-run-psi.sh >> /dzl/log/psi.log 2>&1'
+      cron:
+        name: dzl PSI
+        user: dzl
+        minute: 0
+        hour: '*/3'
+        job: '/usr/bin/flock -n /dzl/log/.lockfile-psi /dzl/scripts/agent-run-psi.sh >> /dzl/log/psi.log 2>&1'
     - name: setup cron job for deleting old data
       cron:
         name: db cleanup
