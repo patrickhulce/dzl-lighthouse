@@ -12,6 +12,9 @@
 
   const SUFFIX_BY_METRIC = {
     'timing-total': ' s',
+    'timing-total-minus-load': ' s',
+    'timing-gather-afterpass': ' s',
+    'timing-runner-auditing': ' s',
     'first-contentful-paint': ' s',
     interactive: ' s',
     'first-contentful-paint-deltasPercent': ' %',
@@ -23,7 +26,7 @@
   }
 
   const {data, sortedBatchIds} = await fetchData()
-  let activeMetric = 'timing-total'
+  let activeMetric = 'first-contentful-paint'
   let batchIdA = _.find(sortedBatchIds, id => id.startsWith('official')) || sortedBatchIds[0]
   let batchIdB = _.find(sortedBatchIds, id => !id.startsWith('official')) || sortedBatchIds[1]
   resetGraphLabels()
