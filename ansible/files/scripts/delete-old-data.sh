@@ -13,4 +13,7 @@ WHERE label = 'official-ci' AND
 (type != 'metric' AND name != 'timing-total') AND
 batchTime <= DATE_SUB(DATE(NOW()), INTERVAL 7 DAY);
 
+DELETE FROM lhrs
+WHERE batchTime <= DATE_SUB(DATE(NOW()), INTERVAL 14 DAY);
+
 EOF

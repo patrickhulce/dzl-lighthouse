@@ -38,8 +38,9 @@ module.exports = async function serve(args) {
   app.use(express.static(staticDir))
 
   app.get('/dashboard-data.json', async (req, res) => {
-    if (req.query.proxy) {
-      const response = await fetch(`https://dzl.patrickhulce.com${req.originalUrl}`)
+    if (req.query.proxy && req.host === 'localhost') {
+      const remotePath = req.originalUrl.replace('proxy=', 'origProxy=')
+      const response = await fetch(`https://dzl.patrickhulce.com${remotePath}`)
       res.json(await response.json())
       return
     }
