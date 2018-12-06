@@ -112,6 +112,7 @@ async function collect() {
   }
 
   await collectionPromise
+  if (startAt === 0) await commands.collect({...args, isWrapup: true})
 }
 
 async function serve() {

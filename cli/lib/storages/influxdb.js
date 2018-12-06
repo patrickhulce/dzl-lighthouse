@@ -76,4 +76,5 @@ module.exports = {
 
     await influx.writePoints(points)
   },
+  async wrapup({batchId, label, hash, storageOptions}) {},
 }

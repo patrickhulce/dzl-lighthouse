@@ -38,6 +38,25 @@ const sharedIndexes = [
   },
 ]
 
+const batchModel = [
+  'batches',
+  _.omit(sharedAttributes, ['url', 'runId']),
+  {
+    indexes: [
+      {
+        name: 'batches_batchid',
+        method: 'HASH',
+        fields: ['batchId'],
+      },
+      {
+        name: 'batches_label_time',
+        method: 'BTREE',
+        fields: ['label', 'batchTime'],
+      },
+    ],
+  },
+]
+
 const dataPointModel = [
   'data_points',
   {
@@ -83,10 +102,11 @@ async function build(storageOptions) {
 
   const DataPoint = sequelize.define(...dataPointModel)
   const LHR = sequelize.define(...rawModel)
+  const Batch = sequelize.define(...batchModel)
 
   await sequelize.sync()
 
-  return {sequelize, DataPoint, LHR}
+  return {sequelize, DataPoint, LHR, Batch}
 }
 
 function cleanTimingName(name) {
@@ -159,5 +179,11 @@ module.exports = {
     } catch (err) {
       console.error(err.message.slice(0, 200))
     }
+  },
+  async wrapup({batchId, label, hash, storageOptions}) {
+    const {Batch} = await build(storageOptions)
+    const batchTime = new Date().toISOString()
+    const batch = {batchId, batchTime, label, hash}
+    await Batch.create(batch)
   },
 }

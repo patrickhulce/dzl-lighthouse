@@ -40,6 +40,8 @@ module.exports = async function collect(args) {
     storageOptions,
   }
 
+  if (args.isWrapup) return await storage.wrapup()
+
   if (!args.skipSetup) {
     console.log('Setting up collector')
     await collector.setup(options)
