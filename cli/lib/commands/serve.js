@@ -26,7 +26,7 @@ function pageHandler(fallbackPage) {
 module.exports = async function serve(args) {
   const config = args.config
   const storageOptions = _.merge(_.cloneDeep(storage.defaults), config.storage)
-  const {DataPoint} = await storage.build(storageOptions)
+  const {DataPoint, Batch} = await storage.build(storageOptions)
 
   const app = express()
   app.use(bodyParser.json())
@@ -46,10 +46,9 @@ module.exports = async function serve(args) {
     }
 
     async function getBatchIDs(where) {
-      const response = await DataPoint.findAll({
+      const response = await Batch.findAll({
         where: {label: where.label},
-        attributes: ['batchId', [Sequelize.fn('max', Sequelize.col('batchTime')), 'batchTime']],
-        group: ['batchId'],
+        attributes: ['batchId', 'batchTime'],
       })
 
       return response
