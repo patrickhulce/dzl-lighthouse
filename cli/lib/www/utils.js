@@ -23,6 +23,18 @@
     return el
   }
 
+  function getMetricDisplayName(metric) {
+    return _.startCase(metric.replace(/^(audit-score|timing)-/, ''))
+  }
+
+  function getGraphTitle({url, metric}) {
+    const urlPart = url ? `${url} - ` : ''
+    const cleanMetric = getMetricDisplayName(metric)
+    if (metric.startsWith('audit-score-')) return `${urlPart}${cleanMetric}`
+    if (metric.startsWith('timing-')) return `${urlPart}${cleanMetric}`
+    return url
+  }
+
   /**
    * @see https://stackoverflow.com/questions/16194730/seeking-a-statistical-javascript-function-to-return-p-value-from-a-z-score
    */
@@ -330,6 +342,8 @@
     get99thValue,
     getAverageValue,
     getPValue,
+    getMetricDisplayName,
+    getGraphTitle,
     fetchData,
     fetchAndRender,
     render,

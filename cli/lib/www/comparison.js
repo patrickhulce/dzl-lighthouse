@@ -8,6 +8,7 @@
     getHistogramData,
     getAverageValue,
     getPValue,
+    getGraphTitle,
   } = utils
 
   const SUFFIX_BY_METRIC = {
@@ -85,13 +86,6 @@
       activeMetric = metricSelect.value
       renderWithBatches(batchIdA, batchIdB)
     })
-  }
-
-  function getGraphTitle({url, metric}) {
-    const cleanMetric = _.startCase(metric.replace(/^(audit-score|timing)-/, ''))
-    if (metric.startsWith('audit-score-')) return `${url} - ${cleanMetric}`
-    if (metric.startsWith('timing-')) return `${url} - ${cleanMetric}`
-    return url
   }
 
   function convertMetricToGraphsAndTiles({
