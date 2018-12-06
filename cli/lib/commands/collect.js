@@ -3,7 +3,7 @@ const mapPromise = require('bluebird').map
 
 function pruneLHR(lhr) {
   for (const {name, duration} of lhr.timing.entries || []) {
-    lhr.timing[name] = duration
+    lhr.timing[name] = (lhr.timing[name] || 0) + duration
   }
 
   lhr.timing['total-minus-load'] = lhr.timing.total - lhr.timing['lh:gather:loadPage-defaultPass']
