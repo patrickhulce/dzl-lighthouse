@@ -231,7 +231,7 @@
       const stddevOfSum = Math.sqrt(statsA.variance + statsB.variance)
       const z = stddevOfSum === 0 ? 0 : meanDifference / stddevOfSum
       const percentile = getZPercentile(z)
-      if (!Number.isFinite(percentile)) debugger
+
       pvalues[url] = Math.min(percentile, 1 - percentile) * 2
       statsAByURL[url] = statsA
       statsBByURL[url] = statsB
