@@ -11,6 +11,8 @@ const Promise = require('bluebird')
 
 const readFile = util.promisify(fs.readFile)
 const staticDir = path.join(__dirname, '../www')
+const cacheDir = path.join(__dirname, '../../.cache')
+if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir)
 
 function pageHandler(fallbackPage) {
   return async (req, res) => {
@@ -57,42 +59,43 @@ module.exports = async function serve(args) {
         .map(item => item.batchId)
     }
 
-    async function getBatchData(where) {
-      const metadataAttrs = ['batchId', 'hash', 'label']
-      const [metadata, ...data] = await Promise.all([
-        DataPoint.findAll({where, attributes: metadataAttrs, group: metadataAttrs}),
-        DataPoint.findAll({
-          where: _.omit(where, 'label'),
-          attributes: ['name', 'value', 'url', 'batchId'],
-        }),
-      ])
+    async function getSingleBatch(batchId) {
+      const cleanBatch = batchId.replace(/[^a-z0-9]+/g, '_')
+      const cacheFile = path.join(cacheDir, `${cleanBatch}.json`)
+      if (fs.existsSync(cacheFile) && !req.query.force) {
+        console.log('Using cached copy at', cacheFile)
+        return JSON.parse(fs.readFileSync(cacheFile, 'utf8'))
+      }
 
-      const groups = _(data)
-        .flatten()
-        .groupBy('batchId')
-        .mapValues((values, batchId) => {
-          const dataByURL = _(values)
-            .groupBy('url')
-            .mapValues(values =>
-              _(values)
-                .groupBy('name')
-                .mapValues(items => items.map(item => item.value))
-                .value(),
-            )
-            .value()
+      const batchMetadata = (await Batch.find({where: {batchId}})).toJSON()
+      const batchData = await DataPoint.findAll({
+        where: {batchId},
+        attributes: ['name', 'value', 'url', 'batchId'],
+      })
 
-          dataByURL._metadata = _.find(metadata, {batchId})
-
-          return dataByURL
-        })
+      const batchDataByURL = _(batchData)
+        .groupBy('url')
+        .mapValues(values =>
+          _(values)
+            .groupBy('name')
+            .mapValues(items => items.map(item => item.value))
+            .value(),
+        )
         .value()
 
-      return groups
+      batchDataByURL._metadata = batchMetadata
+
+      fs.writeFileSync(cacheFile, JSON.stringify(batchDataByURL, null, 2))
+      return batchDataByURL
+    }
+
+    async function getBatchData(batchIds) {
+      const batches = await Promise.all(batchIds.map(getSingleBatch))
+      return _.keyBy(batches, batch => batch._metadata.batchId)
     }
 
     const where = {
       label: req.query.label || 'official-ci',
-      type: {$notIn: ['timing-breakdown']},
     }
 
     let batchIds = await getBatchIDs(where)
@@ -103,7 +106,7 @@ module.exports = async function serve(args) {
     }
 
     console.log('Found batchIds', batchIds)
-    res.json(await getBatchData({...where, batchId: {$in: batchIds}}))
+    res.json(await getBatchData(batchIds))
   })
 
   app.listen(args.port, () => process.stdout.write(`Server listening on port ${args.port}`))
