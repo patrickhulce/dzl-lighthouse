@@ -11,6 +11,10 @@ if [ -e /dzl/log/dzl-off ]; then
   exit 1
 fi
 
+echo "Checking for ondemand runs first..."
+/dzl/scripts/agent-run-ondemand.sh >> /dzl/log/ondemand.log 2>&1
+echo "Done checking for ondemand runs!"
+
 if [ -e /dzl/conf/tokens.sh ]; then
   source /dzl/conf/tokens.sh
   echo "GH Token is $(echo $GH_TOKEN | head -c 4)..."
