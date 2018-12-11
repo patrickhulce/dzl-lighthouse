@@ -68,6 +68,7 @@
       with_items:
         - conf/agent-official.config.js
         - conf/agent-branch.config.js
+        - conf/agent-ondemand.config.js
         - conf/agent-psi.config.js
     - name: setup cron job for lighthouse static server
       cron: name='lh static server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-static-server node /dzl/src/lighthouse/lighthouse-cli/test/fixtures/static-server.js'
@@ -157,4 +158,18 @@
   become_user: dzl
   tasks:
     - name: setup cron job for agent-run-branch
-      cron: name='dzl branch' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-branch /dzl/scripts/agent-run-branch.sh >> /dzl/log/branch.log 2>&1'
+      cron:
+        name: dzl branch
+        user: dzl
+        # Run on every even minute
+        minute: '0-58/2'
+        # We'll use the same lockfile for both
+        job: '/usr/bin/flock -n /dzl/log/.lockfile-branch-and-ondemand /dzl/scripts/agent-run-branch.sh >> /dzl/log/branch.log 2>&'
+    - name: setup cron job for agent-run-ondemand
+      cron:
+        name: dzl ondemand
+        user: dzl
+        # Run on every odd minute
+        minute: '1-59/2'
+        # We'll use the same lockfile for both
+        job: '/usr/bin/flock -n /dzl/log/.lockfile-branch-and-ondemand /dzl/scripts/agent-run-ondemand.sh >> /dzl/log/ondemand.log 2>&'
