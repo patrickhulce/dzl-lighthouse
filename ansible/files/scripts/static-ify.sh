@@ -34,7 +34,7 @@ if [[ "${LABEL}" == "official-continuous" ]]; then
   WEBPAGE_ID="continuous"
 fi
 
-if [[ "${LABEL}" == "official-psi" ]]; then
+if [[ "${LABEL}" == "continuous-psi" ]]; then
   WEBPAGE_ID="psi"
 fi
 

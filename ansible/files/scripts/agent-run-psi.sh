@@ -31,7 +31,7 @@ DZL_EXIT_CODE=$?
 
 if [ $DZL_EXIT_CODE -eq 0 ]; then
   echo "Success!"
-  export LABEL="official-psi"
+  export LABEL="continuous-psi"
   /dzl/scripts/static-ify.sh || exit 1
   exit 0
 else
