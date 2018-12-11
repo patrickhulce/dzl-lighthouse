@@ -53,6 +53,26 @@ const args = yargs
       default: 'agent.config.js',
     },
   })
+  .command('requests', 'manipulate ondemand requests', {
+    config: {
+      type: 'string',
+      default: 'agent.config.js',
+    },
+    action: {
+      type: 'string',
+      choices: ['get', 'update'],
+      default: 'get',
+    },
+    requestId: {
+      type: 'number',
+      default: Number(process.env.REQUEST_ID),
+    },
+    status: {
+      type: 'string',
+      choices: ['started', 'finished', 'failed'],
+      default: 'started',
+    },
+  })
   .demandCommand().argv
 
 function replaceStartAt(tokens, newValue) {
@@ -121,6 +141,12 @@ async function serve() {
   await commands.serve(args)
 }
 
+async function requests() {
+  args.configPath = args.config
+  args.config = require(path.resolve(process.cwd(), args.config))
+  await commands.requests(args)
+}
+
 async function run() {
   switch (args._[0]) {
     case 'collect':
@@ -129,6 +155,10 @@ async function run() {
       break
     case 'serve':
       await serve()
+      break
+    case 'requests':
+      await requests()
+      process.exit(0)
       break
     default:
       throw new Error(`Unrecognized command ${args._[0]}`)
