@@ -42,7 +42,7 @@ const requestModel = [
   'requests',
   {
     id: {type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true},
-    url: Sequelize.STRING(256),
+    url: Sequelize.TEXT,
     hashA: Sequelize.STRING(80),
     hashB: Sequelize.STRING(80),
     status: Sequelize.STRING(40),

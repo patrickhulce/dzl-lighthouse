@@ -31,6 +31,7 @@
   let activeMetric = 'first-contentful-paint'
   let batchIdA = _.find(sortedBatchIds, id => id.startsWith('official')) || sortedBatchIds[0]
   let batchIdB = _.find(sortedBatchIds, id => !id.startsWith('official')) || sortedBatchIds[1]
+  if (batchIdA === batchIdB && sortedBatchIds.length > 1) batchIdB = sortedBatchIds[1]
   resetGraphLabels()
 
   function resetGraphLabels() {
