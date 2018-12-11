@@ -1,0 +1,23 @@
+<div class="container-fluid">
+  <header><h1>DZL Lighthouse Dashboard</h1></header>
+  <div class="form" style="padding-bottom: 20px;">
+    <form action="/requests" method="POST">
+      <input type="url" name="url" placeholder="URL" required />
+      <input type="text" name="hashA" placeholder="Hash A" required/>
+      <input type="text" name="hashB" placeholder="Hash B" required /> <input type="submit" value="Request New Run" />
+    </form>
+  </div>
+  <table class="table">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">URL</th>
+        <th scope="col">Hash A</th>
+        <th scope="col">Hash B</th>
+        <th scope="col">Date</th>
+        <th scope="col">Status</th>
+      </tr>
+    </thead>
+    <tbody id="table-rows"></tbody>
+  </div>
+</div>

@@ -28,16 +28,47 @@ function pageHandler(fallbackPage) {
 module.exports = async function serve(args) {
   const config = args.config
   const storageOptions = _.merge(_.cloneDeep(storage.defaults), config.storage)
-  const {DataPoint, Batch} = await storage.build(storageOptions)
+  const {DataPoint, Batch, Request} = await storage.build(storageOptions)
 
   const app = express()
   app.use(bodyParser.json())
+  app.use(bodyParser.urlencoded())
 
+  app.get('/on-demand', pageHandler('on-demand'))
   app.get('/dashboard', pageHandler('dashboard'))
   app.get('/dashboard-by-url', pageHandler('by-url'))
   app.get('/dashboard-comparison', pageHandler('comparison'))
 
   app.use(express.static(staticDir))
+
+  app.get('/requests', async (req, res) => {
+    res.json(
+      await Request.findAll({
+        order: [['createdAt', 'desc']],
+        limit: 10,
+      }),
+    )
+  })
+
+  app.post('/requests', async (req, res) => {
+    const GIT_HASH_REGEX = /^[0-9a-f]{40}$/
+    try {
+      if (!GIT_HASH_REGEX.test(req.body.hashA)) throw new Error('Invalid hash A')
+      if (!GIT_HASH_REGEX.test(req.body.hashB)) throw new Error('Invalid hash B')
+
+      await Request.create({
+        url: req.body.url,
+        hashA: req.body.hashA,
+        hashB: req.body.hashB,
+        status: 'pending',
+      })
+
+      res.json({success: true})
+    } catch (err) {
+      res.status(400)
+      res.json({success: false, message: err.message})
+    }
+  })
 
   app.get('/dashboard-data.json', async (req, res) => {
     if (req.query.proxy && req.host === 'localhost') {

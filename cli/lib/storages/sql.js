@@ -38,6 +38,18 @@ const sharedIndexes = [
   },
 ]
 
+const requestModel = [
+  'requests',
+  {
+    id: {type: Sequelize.INTEGER, autoIncrement: true, primaryKey: true},
+    url: Sequelize.STRING(256),
+    hashA: Sequelize.STRING(80),
+    hashB: Sequelize.STRING(80),
+    status: Sequelize.STRING(40),
+  },
+  {},
+]
+
 const batchModel = [
   'batches',
   _.omit(sharedAttributes, ['url', 'runId']),
@@ -103,10 +115,11 @@ async function build(storageOptions) {
   const DataPoint = sequelize.define(...dataPointModel)
   const LHR = sequelize.define(...rawModel)
   const Batch = sequelize.define(...batchModel)
+  const Request = sequelize.define(...requestModel)
 
   await sequelize.sync()
 
-  return {sequelize, DataPoint, LHR, Batch}
+  return {sequelize, DataPoint, LHR, Batch, Request}
 }
 
 function cleanTimingName(name) {
