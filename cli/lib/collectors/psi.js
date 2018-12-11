@@ -67,6 +67,9 @@ module.exports = {
     options.hash = hash
   },
   async run({url, lighthouseConfig, collectorOptions}) {
+    // Make sure we don't use a cached response
+    await new Promise(resolve => setTimeout(resolve, 60 * 1000))
+
     const apiURL = getURLForPSI({
       url: url,
       strategy: 'mobile',
@@ -85,6 +88,5 @@ module.exports = {
     return json.lighthouseResult
   },
   async afterEach() {
-    return new Promise(resolve => setTimeout(resolve, 60 * 1000))
   },
 }
