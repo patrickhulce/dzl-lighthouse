@@ -8,6 +8,7 @@ const storage = require(`../storages/sql`)
 const fetch = require('isomorphic-fetch')
 const Sequelize = require('sequelize')
 const Promise = require('bluebird')
+const URL = require('url').URL
 
 const readFile = util.promisify(fs.readFile)
 const staticDir = path.join(__dirname, '../www')
@@ -55,9 +56,11 @@ module.exports = async function serve(args) {
     try {
       if (!GIT_HASH_REGEX.test(req.body.hashA)) throw new Error('Invalid hash A')
       if (!GIT_HASH_REGEX.test(req.body.hashB)) throw new Error('Invalid hash B')
+      const urls = req.body.url.split(',').map(url => new URL(url).href)
+      if (!urls.length) throw new Error('No URLs provided')
 
       await Request.create({
-        url: req.body.url,
+        url: urls.join(','),
         hashA: req.body.hashA,
         hashB: req.body.hashB,
         status: 'pending',
