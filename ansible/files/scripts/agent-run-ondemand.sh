@@ -1,5 +1,6 @@
 #!/bin/bash
 
+export LH_PATH="/dzl/src/lighthouse"
 export DZL_PATH="/dzl/src/dzl/cli"
 export DZL_CONFIG_FILE="/dzl/conf/agent-ondemand.config.js"
 
@@ -10,8 +11,7 @@ fi
 
 # Update Lighthouse checkout
 cd "$LH_PATH" || exit 1
-git checkout -f origin/master || exit 1
-git pull origin master || exit 1
+git fetch origin || exit 1
 
 # Update DZL checkout
 cd "$DZL_PATH" || exit 1
@@ -20,7 +20,7 @@ git pull origin master
 yarn install || exit 1
 
 # Fetch the next request
-node ./bin/dzl.js requests --action=get --config=$DZL_CONFIG_FILE > /tmp/ondemand.opts
+node ./bin/dzl.js requests --no-logging --action=get --config=$DZL_CONFIG_FILE > /tmp/ondemand.opts
 cat /tmp/ondemand.opts
 source /tmp/ondemand.opts
 

@@ -164,7 +164,7 @@
         # Run on every even minute
         minute: '0-58/2'
         # We'll use the same lockfile for both
-        job: '/usr/bin/flock -n /dzl/log/.lockfile-branch-and-ondemand /dzl/scripts/agent-run-branch.sh >> /dzl/log/branch.log 2>&'
+        job: '/usr/bin/flock -n /dzl/log/.lockfile-branch-and-ondemand /dzl/scripts/agent-run-branch.sh >> /dzl/log/branch.log 2>&1'
     - name: setup cron job for agent-run-ondemand
       cron:
         name: dzl ondemand
@@ -172,4 +172,4 @@
         # Run on every odd minute
         minute: '1-59/2'
         # We'll use the same lockfile for both
-        job: '/usr/bin/flock -n /dzl/log/.lockfile-branch-and-ondemand /dzl/scripts/agent-run-ondemand.sh >> /dzl/log/ondemand.log 2>&'
+        job: '/usr/bin/flock -n /dzl/log/.lockfile-branch-and-ondemand /dzl/scripts/agent-run-ondemand.sh >> /dzl/log/ondemand.log 2>&1'
