@@ -102,7 +102,7 @@ const rawModel = [
 ]
 
 async function build(storageOptions) {
-  const logging = msg => console.log(msg.slice(0, 500))
+  const logging = storageOptions.logging || (msg => console.error(msg.slice(0, 500)))
   const sequelize = new Sequelize(
     storageOptions.database,
     storageOptions.user,

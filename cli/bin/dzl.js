@@ -54,6 +54,10 @@ const args = yargs
     },
   })
   .command('requests', 'manipulate ondemand requests', {
+    logging: {
+      type: 'boolean',
+      default: false,
+    },
     config: {
       type: 'string',
       default: 'agent.config.js',

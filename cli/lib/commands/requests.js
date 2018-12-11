@@ -30,8 +30,9 @@ async function updateRequest({Request, status, requestId}) {
 }
 
 module.exports = async function requests(args) {
-  const {action, status, requestId, config} = args
+  const {action, status, requestId, config, logging} = args
   const storageOptions = _.merge(_.cloneDeep(storage.defaults), config.storage)
+  if (!logging) storageOptions.logging = () => {}
   const {Request} = await storage.build(storageOptions)
 
   if (action === 'get') {
