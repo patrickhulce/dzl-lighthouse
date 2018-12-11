@@ -5,7 +5,7 @@ module.exports = {
   },
   collection: {
     runs: 5,
-    urls: [process.env.LH_URL],
+    urls: (process.env.LH_URL || '').split(','),
   },
   storage: {
     type: 'sql',
