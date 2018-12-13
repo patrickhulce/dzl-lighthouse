@@ -56,7 +56,7 @@ module.exports = async function serve(args) {
     try {
       if (!GIT_HASH_REGEX.test(req.body.hashA)) throw new Error('Invalid hash A')
       if (!GIT_HASH_REGEX.test(req.body.hashB)) throw new Error('Invalid hash B')
-      const urls = req.body.url.split(',').map(url => new URL(url).href)
+      const urls = req.body.url.split(/\s+|,/).map(url => new URL(url).href)
       if (!urls.length) throw new Error('No URLs provided')
 
       await Request.create({
