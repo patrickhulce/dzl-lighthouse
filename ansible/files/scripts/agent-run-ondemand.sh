@@ -29,6 +29,8 @@ if [ $HAS_NEXT -eq 0 ]; then
   exit 0;
 fi
 
+node ./bin/dzl.js requests --action=update --status=started --config=$DZL_CONFIG_FILE
+
 /dzl/scripts/run-once-ondemand.sh "$LH_HASH_A"
 DZL_EXIT_CODE=$?
 if [ $DZL_EXIT_CODE -ne 0 ]; then
