@@ -17,4 +17,6 @@ export GH_TOKEN=<github token>
 EOF
 # Login to surge
 surge login
+# Turn off dzl when necessary
+touch /dzl/log/dzl-off
 ```
