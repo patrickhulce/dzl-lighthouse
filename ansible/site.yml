@@ -72,6 +72,8 @@
         - conf/agent-psi.config.js
     - name: setup cron job for lighthouse static server
       cron: name='lh static server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-static-server node /dzl/src/lighthouse/lighthouse-cli/test/fixtures/static-server.js'
+    - name: setup cron job for killing stalled jobs
+      cron: name='kill stalled jobs' user=dzl job='/dzl/scripts/kill-stalled-runs.sh >> /dzl/log/kill.log 2>&1'
 - hosts: masters
   become: yes
   become_user: dzl
