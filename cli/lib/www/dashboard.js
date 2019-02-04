@@ -1,13 +1,125 @@
-;(utils => {
+;(async utils => {
   const {
-    fetchAndRender,
+    fetchData,
+    iterateData,
+    render,
     getBoxAndWhiskerData,
     getHistogramData,
     get99thValue,
     getAverageValue,
   } = utils
 
+  const {data, sortedBatchIds, currentBatchId} = await fetchData()
+
+  const tiles = []
+  const totalBatchCounts = {}
+  const moreThan3Variation = {}
+  const moreThan10Variation = {}
+  const varianceProps = [
+    ['audit-score-first-contentful-paint', 'fcp'],
+    ['audit-score-interactive', 'tti'],
+    ['audit-score-speed-index', 'si'],
+    ['audit-score-first-cpu-idle', 'fcpui'],
+  ]
+
+  const lines = []
+  const batchTicks = []
+  for (const [prop, abbrev] of varianceProps) {
+    const abbrevTitle = abbrev.toUpperCase()
+    totalBatchCounts[prop] = {}
+    moreThan3Variation[prop] = {}
+    moreThan10Variation[prop] = {}
+
+    const allEntries = []
+    const allOccurences = []
+    iterateData(prop, {
+      onURL(values, {url, batchId}) {
+        totalBatchCounts[prop][batchId] = totalBatchCounts[prop][batchId] || 0
+        moreThan3Variation[prop][batchId] = moreThan3Variation[prop][batchId] || 0
+        moreThan10Variation[prop][batchId] = moreThan10Variation[prop][batchId] || 0
+
+        const mean = Math.round(_.mean(values))
+        const variation = values.map(x => Math.abs(mean - Math.round(x)))
+        const numMoreThan3 = variation.filter(x => x > 3).length
+        const numMoreThan10 = variation.filter(x => x > 10).length
+        allOccurences.push(...variation)
+
+        totalBatchCounts[prop][batchId] += 1
+        if (numMoreThan3 > variation.length * 0.05) {
+          moreThan3Variation[prop][batchId] += 1
+        }
+        if (numMoreThan10 > variation.length * 0.05) {
+          moreThan10Variation[prop][batchId] += 1
+        }
+
+        allEntries.push({url, numMoreThan3, numMoreThan10})
+      },
+    })
+
+    const line3 = {name: `${abbrevTitle} >3`, x: [], y: [], type: 'scatter', mode: 'lines'}
+    const line10 = {name: `${abbrevTitle} >10`, x: [], y: [], type: 'scatter', mode: 'lines'}
+    sortedBatchIds.forEach((batchId, index) => {
+      line3.x.push(index)
+      line3.y.push((100 * moreThan3Variation[prop][batchId]) / totalBatchCounts[prop][batchId])
+      line10.x.push(index)
+      line10.y.push((100 * moreThan10Variation[prop][batchId]) / totalBatchCounts[prop][batchId])
+    })
+
+    lines.push(line3, line10)
+    tiles.push([
+      `${abbrev}-variance-3`,
+      () => ((100 * allOccurences.filter(n => n > 3).length) / allOccurences.length).toFixed(1),
+      {title: `${abbrev.toUpperCase()} >3`, unit: '%', warnThreshold: 7, errorThreshold: 10},
+    ])
+
+    tiles.push([
+      `${abbrev}-variance-10`,
+      () => ((100 * allOccurences.filter(n => n > 10).length) / allOccurences.length).toFixed(1),
+      {title: `${abbrev.toUpperCase()} >10`, unit: '%', warnThreshold: 0.7, errorThreshold: 1},
+    ])
+
+    const tableRows = []
+    const groupedByURL = _(allEntries)
+      .groupBy('url')
+      .mapValues(entries => ({
+        url: entries[0].url,
+        numMoreThan3: _.sumBy(entries, 'numMoreThan3'),
+        numMoreThan10: _.sumBy(entries, 'numMoreThan10'),
+      }))
+      .values()
+      .filter(entry => entry.numMoreThan3)
+      .value()
+    for (const entry of _.reverse(_.sortBy(groupedByURL, 'numMoreThan3'))) {
+      tableRows.push(
+        `<tr><td>${entry.url}</td><td>${entry.numMoreThan3} / ${entry.numMoreThan10}</td></tr>`,
+      )
+    }
+
+    const div = document.getElementById(`${abbrev}-variance-list`)
+    const table = `<table class="table"><tr><th>URL</th><th>Counts (>3 / >10)</th></tr>${tableRows.join(
+      '',
+    )}</table>`
+    div.innerHTML = table
+  }
+
+  const ticktext = sortedBatchIds.map(batchId => data[batchId].metadata.hashDate)
   const graphs = [
+    [
+      'metric-score-variance',
+      () => lines,
+      {
+        title: 'Metric Score Variance Over Time',
+        showlegend: true,
+        yaxis: {ticksuffix: '%'},
+        xaxis: {
+          zeroline: false,
+          tickmode: 'array',
+          ticktext: ticktext,
+          tickvals: ticktext.map((_, idx) => idx),
+          nticks: ticktext.length,
+        },
+      },
+    ],
     [
       'runtime-box-whisker',
       () => getBoxAndWhiskerData('timing-total'),
@@ -25,7 +137,7 @@
       () => getBoxAndWhiskerData('interactive-deltasPercent'),
       {
         title: 'TTI Deltas Over Time',
-        yaxis: {ticksuffix: '%'},
+        yaxis: {ticksuffix: '%', range: [0, 25]},
         xaxis: {
           zeroline: false,
           showticklabels: false,
@@ -50,28 +162,30 @@
     ],
   ]
 
-  const tiles = [
-    [
-      'runtime-avg',
-      () => getAverageValue('timing-total'),
-      {title: 'Avg Runtime', unit: 's', warnThreshold: 15, errorThreshold: 30},
+  tiles.push(
+    ...[
+      [
+        'runtime-avg',
+        () => getAverageValue('timing-total'),
+        {title: 'Avg Runtime', unit: 's', warnThreshold: 15, errorThreshold: 30},
+      ],
+      [
+        'runtime-99th',
+        () => get99thValue('timing-total'),
+        {title: '99th Runtime', unit: 's', warnThreshold: 30, errorThreshold: 45},
+      ],
+      [
+        'tti-avg',
+        () => getAverageValue('interactive-deltasPercent'),
+        {title: 'Avg TTI Delta', unit: '%', warnThreshold: 5, errorThreshold: 10},
+      ],
+      [
+        'tti-99th',
+        () => get99thValue('interactive-deltasPercent'),
+        {title: '99th TTI Delta', unit: '%', warnThreshold: 10, errorThreshold: 20},
+      ],
     ],
-    [
-      'runtime-99th',
-      () => get99thValue('timing-total'),
-      {title: '99th Runtime', unit: 's', warnThreshold: 30, errorThreshold: 45},
-    ],
-    [
-      'tti-avg',
-      () => getAverageValue('interactive-deltasPercent'),
-      {title: 'Avg TTI Delta', unit: '%', warnThreshold: 5, errorThreshold: 10},
-    ],
-    [
-      'tti-99th',
-      () => get99thValue('interactive-deltasPercent'),
-      {title: '99th TTI Delta', unit: '%', warnThreshold: 10, errorThreshold: 20},
-    ],
-  ]
+  )
 
-  fetchAndRender({graphs, tiles})
+  render({graphs, tiles})
 })(window.utils)

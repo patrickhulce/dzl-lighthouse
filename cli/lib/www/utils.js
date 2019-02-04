@@ -344,6 +344,7 @@
     getPValue,
     getMetricDisplayName,
     getGraphTitle,
+    iterateData,
     fetchData,
     fetchAndRender,
     render,
