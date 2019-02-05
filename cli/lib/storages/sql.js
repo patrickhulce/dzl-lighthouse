@@ -191,6 +191,9 @@ module.exports = {
 
       for (const row of dataPoints) {
         if (!Number.isFinite(row.value)) row.value = undefined
+        if (row.value > 1000) row.value = Math.round(row.value)
+        if (row.value > 1) row.value = Math.round(row.value * 1000) / 1000
+        if (row.value.toString().length > 6) row.value = Math.round(row.value * 100000) / 100000
       }
     }
 
