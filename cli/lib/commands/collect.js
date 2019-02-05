@@ -58,11 +58,24 @@ module.exports = async function collect(args) {
         console.log('Running collector on', url)
 
         let lhr
-        try {
-          lhr = await collector.run({url, ...options})
-        } catch (err) {
-          console.log('Run on', url, 'failed. Trying one more time')
-          lhr = await collector.run({url, ...options})
+        let lastErr
+        let tries = 0
+        while (!lhr) {
+          if (tries > 5) {
+            console.log('Failed too many times, stopping...')
+            throw lastErr
+          } else if (tries > 0) {
+            console.log('Run on', url, 'failed. Trying again...')
+          }
+
+          tries++
+
+          try {
+            lhr = await collector.run({url, ...options})
+          } catch (err) {
+            lastErr = err
+            console.error('Run failed', err)
+          }
         }
 
         await collector.afterEach()
