@@ -111,12 +111,10 @@
 
       for (const [url, properties] of Object.entries(batch)) {
         for (let [propertyName, values] of Object.entries(properties)) {
+          values = values.filter(x => Number.isFinite(x))
+
           if (propertyName.startsWith('audit-score')) {
             properties[propertyName] = values.map(x => x * 100)
-            continue
-          }
-
-          if (propertyName.startsWith('diagnostic')) {
             continue
           }
 
@@ -125,17 +123,19 @@
             continue
           }
 
-          values = values.map(x => x / 1000)
+          if (!propertyName.startsWith('diagnostic')) {
+            values = values.map(x => x / 1000)
+          }
 
           const {stddev, mean} = computeStatistics(values)
-          const stddevPercent = stddev / mean
+          const stddevPercent = stddev / mean || 0
 
           const deltas = values.map(x => x - mean)
           properties[propertyName] = values
           properties[`${propertyName}-deltas`] = deltas
           properties[`${propertyName}-deltasAbsolute`] = deltas.map(x => Math.abs(x))
           properties[`${propertyName}-deltasPercent`] = deltas.map(
-            x => Math.round((10000 * Math.abs(x)) / mean) / 100,
+            x => Math.round((10000 * Math.abs(x)) / mean || 0) / 100,
           )
           properties[`${propertyName}-mean`] = [mean]
           properties[`${propertyName}-stddev`] = [stddev]

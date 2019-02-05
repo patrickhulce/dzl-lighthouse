@@ -11,6 +11,7 @@
 
   const {data, sortedBatchIds, currentBatchId} = await fetchData()
 
+  const dataPointNames = _.uniq(_.flattenDeep(_.map(data, v => _.map(v, v => _.keys(v)))))
   const tiles = []
   const totalBatchCounts = {}
   const moreThan3Variation = {}
@@ -119,47 +120,121 @@
         },
       },
     ],
-    [
-      'runtime-box-whisker',
-      () => getBoxAndWhiskerData('timing-total'),
-      {
-        title: 'Runtime Over Time',
-        yaxis: {ticksuffix: ' s'},
-        xaxis: {
-          zeroline: false,
-          showticklabels: false,
-        },
-      },
-    ],
-    [
-      'tti-variance-box-whisker',
-      () => getBoxAndWhiskerData('interactive-deltasPercent'),
-      {
-        title: 'TTI Deltas Over Time',
-        yaxis: {ticksuffix: '%', range: [0, 25]},
-        xaxis: {
-          zeroline: false,
-          showticklabels: false,
-        },
-      },
-    ],
-    [
-      'runtime-histogram',
-      () => getHistogramData('timing-total'),
-      {
-        title: 'Runtime Distribution',
-        xaxis: {ticksuffix: ' s'},
-      },
-    ],
-    [
-      'tti-variance-histogram',
-      () => getHistogramData('interactive-deltasPercent'),
-      {
-        title: 'TTI Deltas Distribution',
-        xaxis: {ticksuffix: '%'},
-      },
-    ],
   ]
+
+  const diagnosticContainerEl = document.getElementById('diagnostics-row')
+  for (const dataPointName of dataPointNames) {
+    if (!/^diagnostic.*deltasPercent/.test(dataPointName)) continue
+
+    const containerEl = document.createElement('div')
+    containerEl.classList.add(window.innerWidth > 1200 ? 'col-3' : 'col-4')
+    const graphContainerEl = document.createElement('div')
+    graphContainerEl.classList.add('col-12', 'graph')
+    graphContainerEl.id = `${dataPointName}-graph`
+    const averageEl = document.createElement('div')
+    averageEl.classList.add('col-6', 'tile')
+    averageEl.id = `${dataPointName}-avg`
+    const tailEl = document.createElement('div')
+    tailEl.classList.add('col-6', 'tile')
+    tailEl.id = `${dataPointName}-tail`
+
+    containerEl.innerHTML = `
+    <div class="row graph-row"></div>
+    <div class="row tile-row"></div>
+    `
+    containerEl.querySelector('.graph-row').appendChild(graphContainerEl)
+    containerEl.querySelector('.graph-row').appendChild(averageEl)
+    containerEl.querySelector('.graph-row').appendChild(tailEl)
+
+    const friendlyName = _.startCase(dataPointName)
+      .replace(/Diagnostic /, '')
+      .replace(/Deltas Percent/, '')
+
+    graphs.push([
+      graphContainerEl.id,
+      () => {
+        const histData = getHistogramData(dataPointName)
+        histData[0].x = histData[0].x.map(x => Math.min(x, 99))
+        Object.assign(histData[0], {xbins: {start: 0, end: 100, size: 10}})
+        return histData
+      },
+      {
+        margin: {
+          l: 30,
+          r: 30,
+          b: 30,
+          t: 30,
+          pad: 0,
+        },
+        font: {
+          family: 'Courier New, monospace',
+          size: 10,
+        },
+        title: friendlyName,
+        xaxis: {ticksuffix: '%', range: [0, 100]},
+      },
+    ])
+
+    tiles.push(
+      [
+        averageEl.id,
+        () => getAverageValue(dataPointName),
+        {title: 'Avg', unit: '%', warnThreshold: 10, errorThreshold: 30},
+      ],
+      [
+        tailEl.id,
+        () => get99thValue(dataPointName),
+        {title: '99th', unit: '%', warnThreshold: 50, errorThreshold: 80},
+      ],
+    )
+
+    diagnosticContainerEl.appendChild(containerEl)
+  }
+
+  graphs.push(
+    ...[
+      [
+        'runtime-box-whisker',
+        () => getBoxAndWhiskerData('timing-total'),
+        {
+          title: 'Runtime Over Time',
+          yaxis: {ticksuffix: ' s'},
+          xaxis: {
+            zeroline: false,
+            showticklabels: false,
+          },
+        },
+      ],
+      [
+        'tti-variance-box-whisker',
+        () => getBoxAndWhiskerData('interactive-deltasPercent'),
+        {
+          title: 'TTI Deltas Over Time',
+          yaxis: {ticksuffix: '%', range: [0, 25]},
+          xaxis: {
+            zeroline: false,
+            showticklabels: false,
+          },
+        },
+      ],
+      [
+        'runtime-histogram',
+        () => getHistogramData('timing-total'),
+        {
+          title: 'Runtime Distribution',
+          xaxis: {ticksuffix: ' s'},
+        },
+      ],
+      [
+        'tti-variance-histogram',
+        () => getHistogramData('interactive-deltasPercent'),
+        {
+          title: 'TTI Deltas Distribution',
+          xaxis: {ticksuffix: '%'},
+        },
+      ],
+    ],
+  )
 
   tiles.push(
     ...[

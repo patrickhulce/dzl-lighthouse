@@ -134,3 +134,7 @@ h2 {
 .hash-link:hover .hash-link__tooltip {
   display: block;
 }
+
+#diagnostics-row .graph {
+  height: 200px;
+}
