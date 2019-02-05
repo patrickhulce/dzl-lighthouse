@@ -191,9 +191,11 @@ module.exports = {
 
       for (const row of dataPoints) {
         if (!Number.isFinite(row.value)) row.value = undefined
-        row.value = Number(
-          row.value.toLocaleString(undefined, {maximumSignificantDigits: 6}).replace(/,/g, ''),
-        )
+        if (row.value) {
+          row.value = Number(
+            row.value.toLocaleString(undefined, {maximumSignificantDigits: 6}).replace(/,/g, ''),
+          )
+        }
       }
     }
 
