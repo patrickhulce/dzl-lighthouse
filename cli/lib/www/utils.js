@@ -6,6 +6,27 @@
   const REPO_URL = 'https://github.com/GoogleChrome/lighthouse'
   const noop = () => undefined
 
+  let fetching = false
+  async function getGithubHashInfo(hash) {
+    const cachedCopy = localStorage.getItem(`hash_data-${hash}`)
+    if (cachedCopy) return JSON.parse(cachedCopy)
+
+    if (fetching) return
+    fetching = true
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/GoogleChrome/lighthouse/commits/${hash}`,
+      )
+      const json = await response.json()
+      localStorage.setItem(`hash_data-${hash}`, JSON.stringify(json))
+      return json
+    } catch (err) {
+      throw err
+    } finally {
+      fetching = false
+    }
+  }
+
   function createElement(parent, tagName, ...restArgs) {
     let id
     let classes
@@ -272,11 +293,27 @@
     envEl.classList.add('environment')
     envEl.innerHTML = `
       <div class="row">
-        <div class="col-4">Hash: <a target="_blank" href="${hashLink}">${hash.slice(0, 8)}</a></div>
+        <div class="col-4 hash-link">
+          Hash: <a target="_blank" href="${hashLink}">${hash.slice(0, 8)}</a>
+          <pre class="hash-link__tooltip">Loading...</pre>
+        </div>
         <div class="col-4">Data Channel: <span>${label}</span></div>
         <div class="col-4">Data Collected: <span>${date.toLocaleString()}</span></div>
       </div>
     `
+
+    const hashLinkEl = envEl.querySelector('.hash-link')
+    const hashLinkTooltipEl = envEl.querySelector('.hash-link__tooltip')
+    hashLinkEl.addEventListener('mouseover', async () => {
+      if (!hashLinkTooltipEl.textContent.includes('Loading...')) return
+
+      const hashInfo = await getGithubHashInfo(hash)
+      hashLinkTooltipEl.textContent = [
+        hashInfo.commit.message,
+        `${hashInfo.commit.author.name} (${hashInfo.commit.author.email})`,
+        new Date(hashInfo.commit.author.date).toLocaleString(),
+      ].join('\n')
+    })
   }
 
   function asyncNewPlot(...plotlyArgs) {
