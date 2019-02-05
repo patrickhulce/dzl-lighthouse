@@ -175,6 +175,18 @@ module.exports = {
         dataPoints.push({...baseRow, name: `audit-score-${id}`, value, type: 'audit-score'})
       }
 
+      const diagnostics = _.get(lhr, ['audits', 'diagnostics', 'details', 'items', '0'])
+      if (diagnostics) {
+        for (const [diagnosticName, value] of Object.entries(diagnostics)) {
+          dataPoints.push({
+            ...baseRow,
+            type: 'diagnostic',
+            name: `diagnostic-${diagnosticName}`,
+            value,
+          })
+        }
+      }
+
       lhrRows.push({...baseRow, lhr: JSON.stringify(lhr).replace(/[^\x00-\x7F]/g, '')})
 
       for (const row of dataPoints) {

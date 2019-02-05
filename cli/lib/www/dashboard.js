@@ -23,7 +23,6 @@
   ]
 
   const lines = []
-  const batchTicks = []
   for (const [prop, abbrev] of varianceProps) {
     const abbrevTitle = abbrev.toUpperCase()
     totalBatchCounts[prop] = {}
