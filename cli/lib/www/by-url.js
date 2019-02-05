@@ -30,6 +30,7 @@
       .groupBy(metric => {
         if (metric.startsWith('audit-score')) return 'Audit Scores'
         if (metric.startsWith('timing-')) return 'Timings'
+        if (metric.startsWith('diagnostic-')) return 'Diagnostics'
         return 'Metric'
       })
       .value()
@@ -85,13 +86,18 @@
     const boxAndWhiskerData = getBoxAndWhiskerData(metric, {where: o => o.url === url})
     const values = _.flatMap(boxAndWhiskerData, set => set.y)
     const max = _.max(values)
+    const maxWithPadding = max + Math.round(max * 0.1)
     const isPercentStyleMetric = metric.startsWith('audit-score')
     const isSmallTiming = metric.startsWith('timing') && max < 1
-    const timingYaxis = isSmallTiming
-      ? {ticksuffix: ' ms', range: [0, Math.max(max * 1500, 100)]}
-      : {ticksuffix: ' s', range: [0, Math.max(max + 2, 5)]}
+    let yaxisValue = {ticksuffix: ' s', range: [0, Math.max(max + 2, 5)]}
+    if (isPercentStyleMetric) yaxisValue = {ticksuffix: ' %', range: [0, 100]}
+
+    if (metric.startsWith('diagnostic')) {
+      yaxisValue = {ticksuffix: '', range: [0, maxWithPadding]}
+    }
 
     if (isSmallTiming) {
+      yaxisValue = {ticksuffix: ' ms', range: [0, Math.max(max * 1500, 100)]}
       boxAndWhiskerData.forEach(set => (set.y = set.y.map(value => value * 1000)))
     }
 
@@ -100,7 +106,7 @@
       () => boxAndWhiskerData,
       {
         title: url,
-        yaxis: isPercentStyleMetric ? {ticksuffix: ' %', range: [0, 100]} : timingYaxis,
+        yaxis: yaxisValue,
         xaxis: {
           zeroline: false,
           showticklabels: false,

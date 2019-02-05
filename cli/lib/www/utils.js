@@ -95,6 +95,10 @@
             continue
           }
 
+          if (propertyName.startsWith('diagnostic')) {
+            continue
+          }
+
           if (propertyName.startsWith('timing-')) {
             properties[propertyName] = values.map(x => x / 1000)
             continue
