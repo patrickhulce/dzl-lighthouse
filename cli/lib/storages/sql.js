@@ -151,6 +151,16 @@ module.exports = {
       const runId = `${runIdPrefix}-${Date.now()}`
       const baseRow = {url, runId, batchId, batchTime, label, hash}
 
+      for (const [categoryName, category] of Object.entries(lhr.categories || {})) {
+        const value = category.score || undefined
+        dataPoints.push({
+          ...baseRow,
+          name: `category-${categoryName}`,
+          value,
+          type: 'category-score',
+        })
+      }
+
       for (const name of METRICS) {
         let value = lhr.audits[name].rawValue
         if (!value) value = _.get(lhr.audits.metrics, ['details', 'items', '0', _.camelCase(name)])
