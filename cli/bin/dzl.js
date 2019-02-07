@@ -116,27 +116,30 @@ async function collect() {
   args.config.collection.urls = runURLs.slice(0, args.limit)
   const collectionPromise = commands.collect(args)
 
-  if (spawnExtraChildren) {
-    const startAtIndexes = []
-    for (let i = 0; i < Math.ceil(allURLs.length / args.limit); i++)
-      startAtIndexes.push(i * args.limit)
+  try {
+    if (spawnExtraChildren) {
+      const startAtIndexes = []
+      for (let i = 0; i < Math.ceil(allURLs.length / args.limit); i++)
+        startAtIndexes.push(i * args.limit)
 
-    await Promise.map(
-      startAtIndexes,
-      async startAtIndex => {
-        if (startAtIndex === 0) return collectionPromise
+      await Promise.map(
+        startAtIndexes,
+        async startAtIndex => {
+          if (startAtIndex === 0) return collectionPromise
 
-        console.log('Running', startAtIndex, 'to', startAtIndex + args.limit, 'in child process')
-        const mappedArgs = replaceStartAt(process.argv.slice(1), startAtIndex)
-        mappedArgs.push('--batchId', args.batchId)
-        await execa(process.argv[0], mappedArgs, {stdio: 'inherit'})
-      },
-      {concurrency: args.childProcessConcurrency},
-    )
+          console.log('Running', startAtIndex, 'to', startAtIndex + args.limit, 'in child process')
+          const mappedArgs = replaceStartAt(process.argv.slice(1), startAtIndex)
+          mappedArgs.push('--batchId', args.batchId)
+          await execa(process.argv[0], mappedArgs, {stdio: 'inherit'})
+        },
+        {concurrency: args.childProcessConcurrency},
+      )
+    }
+
+    await collectionPromise
+  } finally {
+    if (startAt === 0) await commands.collect({...args, isWrapup: true})
   }
-
-  await collectionPromise
-  if (startAt === 0) await commands.collect({...args, isWrapup: true})
 }
 
 async function serve() {
