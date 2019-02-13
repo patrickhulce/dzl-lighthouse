@@ -17,6 +17,7 @@
   const moreThan3Variation = {}
   const moreThan10Variation = {}
   const varianceProps = [
+    ['category-performance', 'perf'],
     ['audit-score-first-contentful-paint', 'fcp'],
     ['audit-score-interactive', 'tti'],
     ['audit-score-speed-index', 'si'],

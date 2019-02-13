@@ -118,6 +118,11 @@
             continue
           }
 
+          if (propertyName.startsWith('category-')) {
+            properties[propertyName] = values.map(x => x * 100)
+            continue
+          }
+
           if (propertyName.startsWith('timing-')) {
             properties[propertyName] = values.map(x => x / 1000)
             continue
