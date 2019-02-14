@@ -10,7 +10,7 @@ const args = yargs
   .command('collect', 'run Lighthouse to collect data', {
     hash: {
       type: 'string',
-      default: 'master',
+      default: 'HEAD',
     },
     label: {
       type: 'string',

@@ -8,6 +8,14 @@ function getPaths(collectorOptions) {
   return {cwd, configPath}
 }
 
+function getPrecomputedLanternDataPath(cwd, url) {
+  const cleanURL = url
+    .replace(/[^a-z0-9]+/gi, '')
+    .replace(/^https?/, '')
+    .slice(0, 40)
+  return path.join(cwd, `lantern-data-${cleanURL}.json`)
+}
+
 /**
  * Runs a local Lighthouse checkout, requires...
  *   - the repository to be checked out in a clean state
@@ -31,6 +39,13 @@ module.exports = {
   },
   async run({url, collectorOptions}) {
     const {cwd, configPath} = getPaths(collectorOptions)
+    const lanternDataPath = getPrecomputedLanternDataPath(cwd, url)
+    let lanternDataFlags = ['--lantern-data-output-path', lanternDataPath]
+    if (fs.existsSync(lanternDataPath))
+      lanternDataFlags = ['--precomputed-lantern-data-path', lanternDataPath]
+
+    let extraChromeFlags = []
+    if (collectorOptions.headless) extraChromeFlags = ['--chrome-flags="--headless"']
 
     const results = await execa(
       './lighthouse-cli/index.js',
@@ -40,7 +55,8 @@ module.exports = {
         configPath,
         '--output',
         'json',
-        // '--chrome-flags="--headless"',
+        ...lanternDataFlags,
+        ...extraChromeFlags,
       ],
       {cwd},
     )
