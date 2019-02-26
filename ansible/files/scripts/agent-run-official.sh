@@ -34,7 +34,7 @@ git checkout -f master
 git pull origin master
 yarn install
 
-node ./bin/dzl.js collect --limit=1 \
+node --max-old-space-size=4096 ./bin/dzl.js collect --limit=1 \
   --label="$LABEL_PREFIX" --hash="$LH_HASH" --concurrency=1 \
   --config=$DZL_CONFIG_FILE && DZL_EXIT_CODE=$? || DZL_EXIT_CODE=$?
 
