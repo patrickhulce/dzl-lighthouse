@@ -1,6 +1,7 @@
 const fs = require('fs')
 const path = require('path')
 const execa = require('execa')
+const tcpPortUsed = require('tcp-port-used')
 
 function getPaths(collectorOptions) {
   const cwd = path.resolve(process.cwd(), collectorOptions.repositoryPath)
@@ -44,8 +45,17 @@ module.exports = {
     if (fs.existsSync(lanternDataPath))
       lanternDataFlags = ['--precomputed-lantern-data-path', lanternDataPath]
 
-    let extraChromeFlags = []
-    if (collectorOptions.headless) extraChromeFlags = ['--chrome-flags="--headless"']
+    let extraChromeFlags = ''
+    if (collectorOptions.wpr && (await tcpPortUsed.check(8780, '127.0.0.1')))
+      extraChromeFlags += [
+        `--host-resolver-rules="MAP *:80 127.0.0.1:8780,MAP *:443 127.0.0.1:8781,EXCLUDE localhost"`,
+        `--ignore-certificate-errors-spki-list="PhrPvGIaAMmd29hj8BCZOq096yj7uMpRNHpn5PDxI6I="`,
+      ].join(' ')
+
+    if (collectorOptions.headless) extraChromeFlags += ' --headless'
+
+    let chromeFlagsArgs = []
+    if (extraChromeFlags) chromeFlagsArgs = [`--chrome-flags=${extraChromeFlags}`]
 
     const results = await execa(
       './lighthouse-cli/index.js',
@@ -56,7 +66,7 @@ module.exports = {
         '--output',
         'json',
         ...lanternDataFlags,
-        ...extraChromeFlags,
+        ...chromeFlagsArgs,
       ],
       {cwd},
     )

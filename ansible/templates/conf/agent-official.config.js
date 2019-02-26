@@ -1,6 +1,7 @@
 module.exports = {
   collector: {
     type: 'local',
+    wpr: true,
     repositoryPath: process.env.LH_PATH,
   },
   collection: {

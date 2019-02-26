@@ -42,6 +42,7 @@
           - xvfb
           - nodejs
           - google-chrome-stable
+          - golang-go
     - name: install npm globals
       become_user: root
       npm: name='{{ item }}' global=yes
