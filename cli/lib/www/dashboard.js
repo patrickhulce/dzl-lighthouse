@@ -39,8 +39,9 @@
         moreThan3Variation[prop][batchId] = moreThan3Variation[prop][batchId] || 0
         moreThan10Variation[prop][batchId] = moreThan10Variation[prop][batchId] || 0
 
-        const mean = Math.round(_.mean(values))
-        const variation = values.map(x => Math.abs(mean - Math.round(x)))
+        const median = _.sortBy(values, x => x)[Math.floor(values.length / 2)]
+        const variation = values.map(x => Math.abs(median - Math.round(x)))
+        if (url === 'http://www.netflix.com/') console.log(prop, {median, values, variation})
         const numMoreThan3 = variation.filter(x => x > 3).length
         const numMoreThan10 = variation.filter(x => x > 10).length
         allOccurences.push(...variation)
