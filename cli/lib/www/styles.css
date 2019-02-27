@@ -129,6 +129,7 @@ h2 {
   border: 1px solid #666;
   height: 70px;
   bottom: -90px;
+  z-index: 1000;
 }
 
 .hash-link:hover .hash-link__tooltip {
