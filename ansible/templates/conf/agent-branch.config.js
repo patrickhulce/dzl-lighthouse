@@ -1,21 +1,24 @@
 module.exports = {
   collector: {
     type: 'local',
+    wpr: true,
     repositoryPath: process.env.LH_PATH,
   },
   collection: {
     runs: 3,
     urls: [
-      'http://localhost:10200/online-only.html',
-      'http://localhost:10200/perf/fonts.html',
-      'http://localhost:10200/byte-efficiency/tester.html',
-      'http://localhost:10200/a11y/a11y_tester.html',
       'https://example.com',
+      'https://m.facebook.com',
+      'https://www.amazon.com',
+      'https://www.att.com',
+      'https://www.cnet.com',
+      'https://www.cnn.com',
+      'https://www.hulu.com',
+      'https://www.linkedin.com',
       'https://www.sfgate.com',
       'https://www.theverge.com',
-      'https://www.cnn.com',
-      'https://www.cnet.com',
-      'https://www.facebook.com',
+      'https://www.vevo.com',
+      'https://www.wikipedia.org',
     ],
   },
   storage: {
