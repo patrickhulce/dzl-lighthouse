@@ -27,6 +27,9 @@ module.exports = {
   },
   lighthouseConfig: {
     extends: 'lighthouse:default',
-    settings: {onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo', 'pwa']},
+    settings: {
+      maxWaitForFcp: 30000,
+      onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo', 'pwa'],
+    },
   },
 }
