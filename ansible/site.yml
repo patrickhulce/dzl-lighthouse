@@ -24,6 +24,7 @@
         - conf
         - log
         - scripts
+        - data
     - name: add node apt key
       apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
     - name: add node apt repo
@@ -51,6 +52,20 @@
   become: yes
   become_user: dzl
   tasks:
+    - name: check for wprgo installation
+      shell: ls go/src/github.com/catapult-project/catapult/web_page_replay_go/
+      args:
+        chdir: /home/dzl
+      ignore_errors: yes
+      register: lswprgo
+    - name: install web page replay
+      when: lswprgo.failed
+      shell: |
+        go get github.com/catapult-project/catapult/web_page_replay_go
+        go get github.com/urfave/cli
+        go get golang.org/x/net/http2
+      args:
+        chdir: /home/dzl
     - name: check for LH repo
       shell: ls | grep lighthouse
       args:
@@ -62,6 +77,8 @@
       when: lslh.failed
     - name: setup DZL repo
       git: repo=https://github.com/patrickhulce/dzl-lighthouse.git dest=/dzl/src/dzl
+    - name: copy WPR archive over
+      copy: src=files/agent-official-archive.wprgo dest=/dzl/data/archive.wprgo mode=0644
     - name: copy scripts over
       copy: src=files/scripts/ dest=/dzl/scripts mode=0755
     - name: copy templates over
@@ -73,6 +90,8 @@
         - conf/agent-psi.config.js
     - name: setup cron job for lighthouse static server
       cron: name='lh static server' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-static-server node /dzl/src/lighthouse/lighthouse-cli/test/fixtures/static-server.js'
+    - name: setup cron job for web page replay
+      cron: name='wprgo' user=dzl job='/usr/bin/flock -n /dzl/log/.lockfile-wprgo /dzl/scripts/run-wprgo.sh >> /dzl/log/wprgo.log 2>&1'
     - name: setup cron job for killing stalled jobs
       cron: name='kill stalled jobs' user=dzl job='/dzl/scripts/kill-stalled-runs.sh >> /dzl/log/kill.log 2>&1'
 - hosts: masters
