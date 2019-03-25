@@ -2,6 +2,8 @@
   const {
     createElement,
     fetchData,
+    getMetricDisplayName,
+    getMetricsByGroup,
     render,
     renderEnvironment,
     populateHashSelectBoxes,
@@ -23,6 +25,45 @@
   }
   if (batchState.batchIdA === batchState.batchIdB && sortedBatchIds.length > 1)
     batchState.batchIdB = sortedBatchIds[1]
+
+  function populateMetricCheckboxes(data) {
+    const overallContainerEl = document.getElementById('metrics-to-show')
+    const metricsEl = createElement(overallContainerEl, 'div')
+
+    function createCheckboxElement(metric) {
+      const checkboxEl = createElement(metricsEl, 'label', 'metric-checkbox')
+      const inputEl = createElement(checkboxEl, 'input')
+      inputEl.id = `chkbox-${metric}`
+      inputEl.dataset.metric = metric
+      inputEl.type = 'checkbox'
+      const textEl = createElement(checkboxEl, 'span')
+      textEl.textContent = getMetricDisplayName(metric)
+      return checkboxEl
+    }
+
+    const metricsByGroup = getMetricsByGroup(data[batchState.batchIdA])
+    for (const [groupName, metrics] of Object.entries(metricsByGroup)) {
+      for (const metric of metrics) {
+        // Skip the meta-metrics
+        if (/-(delta|stddev|mean)/.test(metric)) continue
+        if (metric.startsWith('timing')) continue
+
+        const checkboxEl = createCheckboxElement(metric)
+        if (activeMetrics.includes(metric)) checkboxEl.querySelector('input').checked = true
+      }
+      createElement(metricsEl, 'hr')
+    }
+
+    const refreshButton = createElement(overallContainerEl, 'button')
+
+    refreshButton.textContent = 'Rerender With Metrics'
+    refreshButton.addEventListener('click', () => {
+      activeMetrics = [...metricsEl.querySelectorAll('input')]
+        .filter(inputEl => inputEl.checked)
+        .map(inputEl => inputEl.dataset.metric)
+      renderWithBatches(batchState.batchIdA, batchState.batchIdB)
+    })
+  }
 
   function renderWithBatches(batchIdA, batchIdB) {
     data[batchIdA].metadata.uiName = `A (${data[batchIdA].metadata.hash.slice(0, 8)})`
@@ -59,14 +100,11 @@
       urlHeader.textContent = `${url}`
       urlHeader.style.textAlign = 'center'
       for (const metric of activeMetrics) {
-        const {
-          shouldFlagPValues,
-          title,
-          histogramId,
-        } = convertMetricToGraphsAndTilesForABComparison({
-          ...renderData,
-          metric,
-        })
+        const {shouldFlagPValues, title, histogramId} =
+          convertMetricToGraphsAndTilesForABComparison({
+            ...renderData,
+            metric,
+          }) || {}
 
         if (shouldFlagPValues && !metric.includes('diagnostic'))
           metricsToLookAt.push([title, histogramId])
@@ -97,6 +135,7 @@
     render({graphs, tiles})
   }
 
-  renderWithBatches(batchState.batchIdA, batchState.batchIdB)
   populateHashSelectBoxes(data, batchState, renderWithBatches)
+  populateMetricCheckboxes(data)
+  renderWithBatches(batchState.batchIdA, batchState.batchIdB)
 })(window.utils)

@@ -139,3 +139,18 @@ h2 {
 #diagnostics-row .graph {
   height: 200px;
 }
+
+#metrics-to-show > div:first-child {
+  column-width: 200px;
+}
+#metrics-to-show > button {
+  font-size: 18px;
+}
+
+.metric-checkbox {
+  display: block;
+}
+
+.metric-checkbox input {
+  margin-right: 5px;
+}

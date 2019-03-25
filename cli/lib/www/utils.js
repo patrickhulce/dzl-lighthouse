@@ -299,6 +299,21 @@
     }
   }
 
+  function getMetricsByGroup(batchData) {
+    return _(batchData)
+      .values()
+      .map(urlData => Object.keys(urlData))
+      .flatten()
+      .uniq()
+      .groupBy(metric => {
+        if (metric.startsWith('audit-score')) return 'Audit Scores'
+        if (metric.startsWith('timing-')) return 'Timings'
+        if (metric.startsWith('diagnostic-')) return 'Diagnostics'
+        return 'Metric'
+      })
+      .value()
+  }
+
   function populateHashSelectBoxes(data, batchState, renderWithBatches) {
     function createOptionElement(batch) {
       const optionEl = document.createElement('option')
@@ -505,7 +520,7 @@
     renderEnvironment()
 
     let numRendered = 0
-    for (const el of document.querySelectorAll('input, select')) el.disabled = true
+    for (const el of document.querySelectorAll('input, select, button')) el.disabled = true
     for (const [domId, dataFn, layoutOverrides] of graphs) {
       await asyncNewPlot(domId, dataFn(), _.merge(_.cloneDeep(layout), layoutOverrides))
       numRendered++
@@ -513,7 +528,7 @@
       if (numRendered > 5) document.body.classList.remove('is-loading')
     }
 
-    for (const el of document.querySelectorAll('input, select')) el.disabled = false
+    for (const el of document.querySelectorAll('input, select, button')) el.disabled = false
   }
 
   async function fetchAndRender(opts) {
@@ -529,6 +544,7 @@
     getPValue,
     getMetricDisplayName,
     getMetricSuffix,
+    getMetricsByGroup,
     getGraphTitle,
     iterateData,
     fetchData,

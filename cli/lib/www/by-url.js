@@ -1,14 +1,5 @@
 ;(async utils => {
-  const {
-    fetchAndRender,
-    fetchData,
-    render,
-    getBoxAndWhiskerData,
-    getHistogramData,
-    get99thValue,
-    getAverageValue,
-    getMetricDisplayName,
-  } = utils
+  const {fetchData, render, getBoxAndWhiskerData, getMetricsByGroup, getMetricDisplayName} = utils
 
   let activeMetric = 'first-contentful-paint'
   const {data, currentBatchId} = await fetchData()
@@ -22,18 +13,7 @@
 
   function populateMetricSelectBox(data) {
     const metricSelectEl = document.getElementById('metric-select')
-    const metricsByGroup = _(data[currentBatchId])
-      .values()
-      .map(urlData => Object.keys(urlData))
-      .flatten()
-      .uniq()
-      .groupBy(metric => {
-        if (metric.startsWith('audit-score')) return 'Audit Scores'
-        if (metric.startsWith('timing-')) return 'Timings'
-        if (metric.startsWith('diagnostic-')) return 'Diagnostics'
-        return 'Metric'
-      })
-      .value()
+    const metricsByGroup = getMetricsByGroup(data[currentBatchId])
 
     for (const [groupName, metrics] of Object.entries(metricsByGroup)) {
       let groupEl = metricSelectEl
