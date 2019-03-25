@@ -44,6 +44,16 @@
     return el
   }
 
+  function getMetricSuffix(metricName) {
+    if (metricName.startsWith('timing')) return ' s'
+    if (metricName.endsWith('deltasPercent')) return ' %'
+    if (metricName.startsWith('first-')) return ' s'
+    if (['interactive', 'speed-index'].includes(metricName)) return ' s'
+    if (metricName.includes('totalTaskTime')) return ' ms'
+    if (metricName.includes('totalByteWeight')) return ' KB'
+    return ' %'
+  }
+
   function getMetricDisplayName(metric) {
     return _.startCase(metric.replace(/^(audit-score|timing)-/, ''))
   }
@@ -51,9 +61,7 @@
   function getGraphTitle({url, metric}) {
     const urlPart = url ? `${url} - ` : ''
     const cleanMetric = getMetricDisplayName(metric)
-    if (metric.startsWith('audit-score-')) return `${urlPart}${cleanMetric}`
-    if (metric.startsWith('timing-')) return `${urlPart}${cleanMetric}`
-    return url
+    return `${urlPart}${cleanMetric}`
   }
 
   /**
@@ -130,6 +138,10 @@
 
           if (!propertyName.startsWith('diagnostic')) {
             values = values.map(x => x / 1000)
+          }
+
+          if (propertyName.includes('totalByteWeight')) {
+            values = values.map(x => Math.round(x / 1024))
           }
 
           const {stddev, mean} = computeStatistics(values)
@@ -287,6 +299,130 @@
     }
   }
 
+  function populateHashSelectBoxes(data, batchState, renderWithBatches) {
+    function createOptionElement(batch) {
+      const optionEl = document.createElement('option')
+      optionEl.textContent = `${batch.metadata.batchId} - (${batch.metadata.hash.slice(0, 8)})`
+      optionEl.value = batch.metadata.batchId
+      return optionEl
+    }
+
+    const hashASelect = document.getElementById('hash-a-select')
+    const hashBSelect = document.getElementById('hash-b-select')
+    const optionsA = []
+    const optionsB = []
+
+    // Add the entries with most recent first
+    const entries = _.sortBy(Object.entries(data), ([id, batch]) =>
+      batch.metadata.date.getTime(),
+    ).reverse()
+    for (const [batchId, batch] of entries) {
+      const optionElA = createOptionElement(batch)
+      optionElA.setAttribute('data-batch', batchId)
+      optionElA.selected = batchState.batchIdA === batchId
+      hashASelect.appendChild(optionElA)
+      optionsA.push(optionElA)
+
+      const optionElB = createOptionElement(batch)
+      optionElB.setAttribute('data-batch', batchId)
+      optionElB.selected = batchState.batchIdB === batchId
+      hashBSelect.appendChild(optionElB)
+      optionsB.push(optionElB)
+    }
+
+    hashASelect.addEventListener('change', () => {
+      batchState.batchIdA = hashASelect.value
+      renderWithBatches(batchState.batchIdA, batchState.batchIdB)
+    })
+
+    hashBSelect.addEventListener('change', () => {
+      batchState.batchIdB = hashBSelect.value
+      renderWithBatches(batchState.batchIdA, batchState.batchIdB)
+    })
+  }
+
+  function convertMetricToGraphsAndTilesForABComparison({
+    graphsRootEl,
+    graphs,
+    tiles,
+    metric,
+    url,
+    whereA,
+    whereB,
+  }) {
+    const title = getGraphTitle({url, metric})
+    const cleanURL = url.replace(/[^a-z]+/gi, '')
+    const domID = `${cleanURL}-${metric}`
+    const boxWhere = o => whereA(o) || whereB(o)
+    const boxMetric = metric.replace('-deltasPercent', '')
+    const boxAndWhiskerData = getBoxAndWhiskerData(boxMetric, {where: boxWhere})
+    const histogramDataA = getHistogramData(metric, {where: whereA})
+    const histogramDataB = getHistogramData(metric, {where: whereB})
+    if (!histogramDataA.length || !histogramDataB.length) return
+
+    const values = _.flatMap(boxAndWhiskerData, set => set.y)
+    const max = _.max(values)
+
+    const rowEl = createElement(graphsRootEl, 'div', 'row')
+
+    const histogramEl = createElement(rowEl, 'div', 'col-5', 'graph-container')
+    histogramEl.id = `${domID}-hist`
+    graphs.push([
+      histogramEl.id,
+      () => histogramDataA.concat(histogramDataB),
+      {
+        title,
+        xaxis: {ticksuffix: getMetricSuffix(metric)},
+      },
+    ])
+
+    const boxEl = createElement(rowEl, 'div', 'col-5', 'graph-container')
+    boxEl.id = `${domID}-box`
+    graphs.push([
+      boxEl.id,
+      () => boxAndWhiskerData,
+      {
+        title,
+        yaxis: {ticksuffix: getMetricSuffix(boxMetric), range: [0, Math.max(max + 2, 5)]},
+        xaxis: {
+          zeroline: false,
+          showticklabels: false,
+        },
+      },
+    ])
+
+    const tilesEl = createElement(rowEl, 'div', 'col-2', 'tiles-container')
+    const avgAEl = createElement(tilesEl, 'div', {id: `${domID}-avg-a`, classes: ['tile']})
+    const avgBEl = createElement(tilesEl, 'div', {id: `${domID}-avg-b`, classes: ['tile']})
+    const pvalueAEl = createElement(tilesEl, 'div', {id: `${domID}-pvalue`, classes: ['tile']})
+    const aValue = getAverageValue(metric, {where: whereA})
+    const bValue = getAverageValue(metric, {where: whereB})
+    const pValue = getPValue(metric, {whereA, whereB}).value
+    const pMagnitude = Math.abs(aValue - bValue)
+    const shouldFlagPValues = pMagnitude / Math.min(aValue, bValue) > 0.05 && pValue < 15
+    tiles.push(
+      [avgAEl.id, () => aValue, {title: 'Average A', unit: getMetricSuffix(metric).trim()}],
+      [avgBEl.id, () => bValue, {title: 'Average B', unit: getMetricSuffix(metric).trim()}],
+      [
+        pvalueAEl.id,
+        () => pValue,
+        {
+          aValue,
+          bValue,
+          pValue: Math.round(pValue),
+          magnitude: pMagnitude,
+          title: 'P-Value',
+          unit: '%',
+          errorThreshold: shouldFlagPValues ? 5 : -1,
+          warnThreshold: shouldFlagPValues ? 15 : -1,
+          descendingWarn: true,
+        },
+      ],
+    )
+
+    return {shouldFlagPValues, title, histogramId: histogramEl.id}
+  }
+
   function renderEnvironment(opts = {}) {
     const {id = 'environment', batchId = currentBatchId} = opts
     const envEl = document.getElementById(id)
@@ -368,13 +504,16 @@
 
     renderEnvironment()
 
+    let numRendered = 0
     for (const el of document.querySelectorAll('input, select')) el.disabled = true
     for (const [domId, dataFn, layoutOverrides] of graphs) {
       await asyncNewPlot(domId, dataFn(), _.merge(_.cloneDeep(layout), layoutOverrides))
-    }
-    for (const el of document.querySelectorAll('input, select')) el.disabled = false
+      numRendered++
 
-    document.body.classList.remove('is-loading')
+      if (numRendered > 5) document.body.classList.remove('is-loading')
+    }
+
+    for (const el of document.querySelectorAll('input, select')) el.disabled = false
   }
 
   async function fetchAndRender(opts) {
@@ -389,10 +528,13 @@
     getAverageValue,
     getPValue,
     getMetricDisplayName,
+    getMetricSuffix,
     getGraphTitle,
     iterateData,
     fetchData,
     fetchAndRender,
+    populateHashSelectBoxes,
+    convertMetricToGraphsAndTilesForABComparison,
     render,
     renderEnvironment,
     createElement,

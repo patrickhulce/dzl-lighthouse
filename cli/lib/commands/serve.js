@@ -39,6 +39,7 @@ module.exports = async function serve(args) {
   app.get('/dashboard', pageHandler('dashboard'))
   app.get('/dashboard-by-url', pageHandler('by-url'))
   app.get('/dashboard-comparison', pageHandler('comparison'))
+  app.get('/dashboard-comparison-2', pageHandler('comparison-2'))
 
   app.use(express.static(staticDir))
 
@@ -143,5 +144,7 @@ module.exports = async function serve(args) {
     res.json(await getBatchData(batchIds))
   })
 
-  app.listen(args.port, () => process.stdout.write(`Server listening on port ${args.port}`))
+  app.listen(args.port, () => {
+    process.stdout.write(`Server listening on port ${args.port}`)
+  })
 }
