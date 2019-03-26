@@ -5,7 +5,7 @@ module.exports = {
     repositoryPath: process.env.LH_PATH,
   },
   collection: {
-    runs: 3,
+    runs: 7,
     urls: [
       'https://example.com',
       'https://m.facebook.com',
