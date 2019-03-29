@@ -7,6 +7,7 @@ export DZL_PATH="/dzl/src/dzl/cli"
 export DISPLAY=:98.0
 export CHROME_PATH="$(which google-chrome-stable)"
 export DZL_CONFIG_FILE="/dzl/conf/agent-branch.config.js"
+export DZL_STABLE_CONFIG_FILE="/dzl/conf/agent-stable.config.js"
 
 if [ -e /dzl/log/dzl-off ]; then
   echo "DZL is off, remove /dzl/log/dzl-off to turn back on."
@@ -102,6 +103,17 @@ for pullid in $PULL_IDS; do
     exit 1
   fi
 done
+
+# Finish up by doing a stable run
+echo "Doing a run of the stable site..."
+git checkout -f master
+yarn install
+
+export LH_HASH=$(git rev-parse HEAD)
+
+node ./bin/dzl.js collect --limit=1 \
+  --label="official-stable" --hash="$LH_HASH" --concurrency=1 \
+  --config=$DZL_STABLE_CONFIG_FILE
 
 echo "Done with all PR checks!"
 exit 0
