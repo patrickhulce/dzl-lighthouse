@@ -84,6 +84,7 @@
     - name: copy templates over
       template: src='templates/{{ item }}' dest='/dzl/{{ item }}'
       with_items:
+        - conf/agent-stable.config.js
         - conf/agent-official.config.js
         - conf/agent-branch.config.js
         - conf/agent-ondemand.config.js
