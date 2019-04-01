@@ -104,12 +104,16 @@ for pullid in $PULL_IDS; do
   fi
 done
 
+cd "$LH_PATH"
+
 # Finish up by doing a stable run
 echo "Doing a run of the stable site..."
 git checkout -f master
 yarn install
 
 export LH_HASH=$(git rev-parse HEAD)
+
+cd "$DZL_PATH"
 
 node ./bin/dzl.js collect --limit=1 \
   --label="official-stable" --hash="$LH_HASH" --concurrency=1 \
