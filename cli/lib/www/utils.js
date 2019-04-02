@@ -528,6 +528,7 @@
       if (numRendered > 5) document.body.classList.remove('is-loading')
     }
 
+    document.body.classList.remove('is-loading')
     for (const el of document.querySelectorAll('input, select, button')) el.disabled = false
   }
 

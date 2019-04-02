@@ -196,11 +196,11 @@
   graphs.push(
     ...[
       [
-        'runtime-box-whisker',
-        () => getBoxAndWhiskerData('timing-total'),
+        'fcp-variance-box-whisker',
+        () => getBoxAndWhiskerData('first-contentful-paint-deltasPercent'),
         {
-          title: 'Runtime Over Time',
-          yaxis: {ticksuffix: ' s'},
+          title: 'FCP Deltas Over Time',
+          yaxis: {ticksuffix: '%', range: [0, 25]},
           xaxis: {
             zeroline: false,
             showticklabels: false,
@@ -220,11 +220,11 @@
         },
       ],
       [
-        'runtime-histogram',
-        () => getHistogramData('timing-total'),
+        'fcp-variance-histogram',
+        () => getHistogramData('first-contentful-paint-deltasPercent'),
         {
-          title: 'Runtime Distribution',
-          xaxis: {ticksuffix: ' s'},
+          title: 'FCP Deltas Distribution',
+          xaxis: {ticksuffix: '%'},
         },
       ],
       [
@@ -241,14 +241,14 @@
   tiles.push(
     ...[
       [
-        'runtime-avg',
-        () => getAverageValue('timing-total'),
-        {title: 'Avg Runtime', unit: 's', warnThreshold: 15, errorThreshold: 30},
+        'fcp-avg',
+        () => getAverageValue('first-contentful-paint-deltasPercent'),
+        {title: 'Avg FCP Delta', unit: '%', warnThreshold: 15, errorThreshold: 30},
       ],
       [
-        'runtime-99th',
-        () => get99thValue('timing-total'),
-        {title: '99th Runtime', unit: 's', warnThreshold: 30, errorThreshold: 45},
+        'fcp-99th',
+        () => get99thValue('first-contentful-paint-deltasPercent'),
+        {title: '99th FCP Delta', unit: '%', warnThreshold: 30, errorThreshold: 45},
       ],
       [
         'tti-avg',

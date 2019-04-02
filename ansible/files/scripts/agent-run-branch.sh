@@ -33,6 +33,8 @@ git pull origin master
 yarn install
 
 cd "$LH_PATH"
+git checkout -f master
+git pull origin master
 yarn install
 
 # If `pulls.report.html` is more than 30 minutes old or not there, fetch a new one
