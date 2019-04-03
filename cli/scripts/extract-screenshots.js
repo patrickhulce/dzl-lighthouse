@@ -14,12 +14,19 @@ lines.forEach((line, idx) => {
   const screenshot = json.audits['final-screenshot'].details.data
   const base64 = screenshot.replace('data:image/jpeg;base64,', '')
   console.log(
-    `Extracted screenshot ${idx} with TTI of ${json.audits.metrics.details.items[0].interactive}`,
+    `Extracted screenshot ${idx} with FCP of ${
+      json.audits.metrics.details.items[0].firstContentfulPaint
+    }`,
   )
   fs.writeFileSync(
     path.join(DOWNLOADS_PATH, `screenshot-${idx}.jpg`),
     Buffer.from(base64, 'base64'),
   )
+  fs.writeFileSync(
+    path.join(DOWNLOADS_PATH, `metrics-${idx}.txt`),
+    JSON.stringify(json.audits.metrics.details.items[0], null, 2),
+  )
+  if (!json.audits.diagnostics) return
   fs.writeFileSync(
     path.join(DOWNLOADS_PATH, `diagnostics-${idx}.txt`),
     JSON.stringify(json.audits.diagnostics.details.items[0], null, 2),
