@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const fs = require('fs')
 const path = require('path')
 const execa = require('execa')
@@ -15,6 +16,23 @@ function getPrecomputedLanternDataPath(cwd, url) {
     .replace(/^https?/, '')
     .slice(0, 40)
   return path.join(cwd, `lantern-data-${cleanURL}.json`)
+}
+
+async function uploadAssetsToGoogleStorage(batchId, preAssets, postAssets) {
+  if (!process.env.SAVE_ASSETS) return
+
+  const newAssets = _.difference(postAssets, preAssets).filter(
+    a => a.includes('.devtools') || a.includes('.trace'),
+  )
+
+  for (const asset of newAssets) {
+    const base = path.basename(asset)
+    process.stdout.write(`uploading ${base} to cloud storage...`)
+    await execa('gsutil', ['cp', asset, `gs://dzl-assets/${batchId}/${base}`], {
+      env: {...process.env, BOTO_CONFIG: '/dev/null'},
+    })
+    process.stdout.write(`done!\n`)
+  }
 }
 
 /**
@@ -38,7 +56,7 @@ module.exports = {
     // Write the config file to disk
     fs.writeFileSync(configPath, JSON.stringify(lighthouseConfig, null, 2))
   },
-  async run({url, collectorOptions}) {
+  async run({url, collectorOptions, batchId}) {
     const {cwd, configPath} = getPaths(collectorOptions)
     const lanternDataPath = getPrecomputedLanternDataPath(cwd, url)
     let lanternDataFlags = ['--lantern-data-output-path', lanternDataPath]
@@ -57,6 +75,10 @@ module.exports = {
     let chromeFlagsArgs = []
     if (extraChromeFlags) chromeFlagsArgs = [`--chrome-flags=${extraChromeFlags}`]
 
+    let saveAssetsFlags = []
+    if (process.env.SAVE_ASSETS) saveAssetsFlags = ['--save-assets']
+
+    const preAssets = fs.readdirSync(cwd).map(p => path.join(cwd, p))
     const results = await execa(
       './lighthouse-cli/index.js',
       [
@@ -67,9 +89,13 @@ module.exports = {
         'json',
         ...lanternDataFlags,
         ...chromeFlagsArgs,
+        ...saveAssetsFlags,
       ],
       {cwd},
     )
+
+    const postAssets = fs.readdirSync(cwd).map(p => path.join(cwd, p))
+    if (process.env.SAVE_ASSETS) await uploadAssetsToGoogleStorage(batchId, preAssets, postAssets)
 
     return JSON.parse(results.stdout)
   },

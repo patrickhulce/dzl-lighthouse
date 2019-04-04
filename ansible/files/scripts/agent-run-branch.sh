@@ -106,14 +106,14 @@ for pullid in $PULL_IDS; do
   fi
 done
 
-cd "$LH_PATH"
-
 # Finish up by doing a stable run
 echo "Doing a run of the stable site..."
+cd "$LH_PATH"
 git checkout -f master
 yarn install
 
 export LH_HASH=$(git rev-parse HEAD)
+export SAVE_ASSETS=1
 
 cd "$DZL_PATH"
 

@@ -29,6 +29,10 @@
       apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
     - name: add node apt repo
       apt_repository: repo='deb https://deb.nodesource.com/node_8.x bionic main' state=present filename=nodejs update_cache=yes
+    - name: add GCloud apt key
+      apt_key: url=https://packages.cloud.google.com/apt/doc/apt-key.gpg state=present
+    - name: add GCloud SDK apt repo
+      apt_repository: repo='deb http://packages.cloud.google.com/apt cloud-sdk-bionic main' state=present filename=gcloud update_cache=yes
     - name: add chrome apt key
       apt_key: url=https://dl-ssl.google.com/linux/linux_signing_key.pub state=present
     - name: add chrome apt repo
@@ -43,6 +47,7 @@
           - xvfb
           - nodejs
           - google-chrome-stable
+          - google-cloud-sdk
           - golang-go
     - name: install npm globals
       become_user: root
