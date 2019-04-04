@@ -31,6 +31,7 @@ async function uploadAssetsToGoogleStorage(batchId, preAssets, postAssets) {
     await execa('gsutil', ['cp', asset, `gs://dzl-assets/${batchId}/${base}`], {
       env: {...process.env, BOTO_CONFIG: '/dev/null'},
     })
+    fs.unlinkSync(asset)
     process.stdout.write(`done!\n`)
   }
 }

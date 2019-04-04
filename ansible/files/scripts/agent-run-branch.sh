@@ -111,6 +111,7 @@ echo "Doing a run of the stable site..."
 cd "$LH_PATH"
 git checkout -f master
 yarn install
+rm *.trace.json *.devtoolslog.json
 
 export LH_HASH=$(git rev-parse HEAD)
 export SAVE_ASSETS=1
