@@ -9,7 +9,7 @@
     getAverageValue,
   } = utils
 
-  const {data, sortedBatchIds, currentBatchId} = await fetchData()
+  const {data, sortedBatchIds} = await fetchData()
 
   const dataPointNames = _.uniq(_.flattenDeep(_.map(data, v => _.map(v, v => _.keys(v)))))
   const tiles = []
@@ -155,7 +155,7 @@
     graphs.push([
       graphContainerEl.id,
       () => {
-        const histData = getHistogramData(dataPointName)
+        const histData = getHistogramData(dataPointName, {where: () => true, flatten: true})
         histData[0].x = histData[0].x.map(x => Math.min(x, 99))
         Object.assign(histData[0], {xbins: {start: 0, end: 100, size: 10}})
         return histData
@@ -180,12 +180,12 @@
     tiles.push(
       [
         averageEl.id,
-        () => getAverageValue(dataPointName),
+        () => getAverageValue(dataPointName, {where: () => true}),
         {title: 'Avg', unit: '%', warnThreshold: 10, errorThreshold: 30},
       ],
       [
         tailEl.id,
-        () => get99thValue(dataPointName),
+        () => get99thValue(dataPointName, {where: () => true}),
         {title: '99th', unit: '%', warnThreshold: 50, errorThreshold: 80},
       ],
     )
@@ -221,7 +221,11 @@
       ],
       [
         'fcp-variance-histogram',
-        () => getHistogramData('first-contentful-paint-deltasPercent'),
+        () =>
+          getHistogramData('first-contentful-paint-deltasPercent', {
+            where: () => true,
+            flatten: true,
+          }),
         {
           title: 'FCP Deltas Distribution',
           xaxis: {ticksuffix: '%'},
@@ -229,7 +233,7 @@
       ],
       [
         'tti-variance-histogram',
-        () => getHistogramData('interactive-deltasPercent'),
+        () => getHistogramData('interactive-deltasPercent', {where: () => true, flatten: true}),
         {
           title: 'TTI Deltas Distribution',
           xaxis: {ticksuffix: '%'},
@@ -242,22 +246,22 @@
     ...[
       [
         'fcp-avg',
-        () => getAverageValue('first-contentful-paint-deltasPercent'),
+        () => getAverageValue('first-contentful-paint-deltasPercent', {where: () => true}),
         {title: 'Avg FCP Delta', unit: '%', warnThreshold: 15, errorThreshold: 30},
       ],
       [
         'fcp-99th',
-        () => get99thValue('first-contentful-paint-deltasPercent'),
+        () => get99thValue('first-contentful-paint-deltasPercent', {where: () => true}),
         {title: '99th FCP Delta', unit: '%', warnThreshold: 30, errorThreshold: 45},
       ],
       [
         'tti-avg',
-        () => getAverageValue('interactive-deltasPercent'),
+        () => getAverageValue('interactive-deltasPercent', {where: () => true}),
         {title: 'Avg TTI Delta', unit: '%', warnThreshold: 5, errorThreshold: 10},
       ],
       [
         'tti-99th',
-        () => get99thValue('interactive-deltasPercent'),
+        () => get99thValue('interactive-deltasPercent', {where: () => true}),
         {title: '99th TTI Delta', unit: '%', warnThreshold: 10, errorThreshold: 20},
       ],
     ],

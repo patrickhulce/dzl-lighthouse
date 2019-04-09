@@ -240,6 +240,17 @@
       },
     })
 
+    if (opts.flatten) {
+      return [
+        {
+          x: [].concat(...datasets.map(d => d.x)),
+          nbinsx: 8,
+          type: 'histogram',
+          name: 'All Data',
+        },
+      ]
+    }
+
     return datasets
   }
 
