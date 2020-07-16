@@ -5,6 +5,7 @@ dist/
 downloads/
 
 nohup.out
-*.sql
+*.gen.sql
+*.gen.json
 *.retry
 *.wprgo
