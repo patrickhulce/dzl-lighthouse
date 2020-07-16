@@ -2,8 +2,9 @@
 
 set -euxo pipefail
 
+INSTANCE_INDEX=0
 CLOUDSDK_CORE_PROJECT=lighthouse-infrastructure
-INSTANCE_NAME=cwv-collect-instance
+INSTANCE_NAME="cwv-collect-instance-$INSTANCE_INDEX"
 ZONE=us-central1-a
 
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances create $INSTANCE_NAME \
@@ -13,7 +14,7 @@ gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances create $INSTANCE_NAM
   --machine-type=n1-standard-2
 
 cat > .tmp_env <<EOF
-export NUMBER_OF_RUNS=5
+export NUMBER_OF_RUNS=9
 EOF
 # Instance needs time to start up.
 until gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./.tmp_env $INSTANCE_NAME:/tmp/lhenv --zone="$ZONE"
@@ -25,6 +26,7 @@ rm .tmp_env
 
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./setup-machine.sh $INSTANCE_NAME:/tmp/setup-machine.sh --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./urls.txt $INSTANCE_NAME:/tmp/urls.txt --zone="$ZONE"
+gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./blocked-patterns.txt $INSTANCE_NAME:/tmp/blocked-patterns.txt --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./run.sh $INSTANCE_NAME:/tmp/run.sh --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./run-on-url.sh $INSTANCE_NAME:/tmp/run-on-url.sh --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute ssh $INSTANCE_NAME --command="bash /tmp/setup-machine.sh" --zone="$ZONE"

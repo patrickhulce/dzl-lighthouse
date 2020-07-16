@@ -22,6 +22,7 @@ sudo npm install -g yarn lighthouse
 sudo useradd -m -s $(which bash) -G sudo lighthouse || echo "Lighthouse user already exists!"
 sudo mv /tmp/lhenv /home/lighthouse/.env
 sudo mv /tmp/urls.txt /home/lighthouse/urls.txt
+sudo mv /tmp/blocked-patterns.txt /home/lighthouse/blocked-patterns.txt
 sudo mv /tmp/run.sh /home/lighthouse/run.sh
 sudo mv /tmp/run-on-url.sh /home/lighthouse/run-on-url.sh
 sudo chown lighthouse.lighthouse /home/lighthouse/*
