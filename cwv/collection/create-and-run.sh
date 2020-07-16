@@ -2,9 +2,9 @@
 
 set -euxo pipefail
 
-INSTANCE_INDEX=0
+INSTANCE_SUFFIX=${1:-instance0}
+INSTANCE_NAME="cwv-collect-$INSTANCE_SUFFIX"
 CLOUDSDK_CORE_PROJECT=lighthouse-infrastructure
-INSTANCE_NAME="cwv-collect-instance-$INSTANCE_INDEX"
 ZONE=us-central1-a
 
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances create $INSTANCE_NAME \

@@ -15,7 +15,7 @@ do
   echo "---------------------------------"
   echo "----- $url -----"
   echo "---------------------------------"
-  bash ./run-on-url.sh "$url" "$BLOCKED_PATTERNS"
+  bash ./run-on-url.sh "$url" "$BLOCKED_PATTERNS" || echo "Run on $url failed :("
 done
 
 tar -czf trace-data.tar.gz data/

@@ -10,6 +10,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
+    "fs-extra": "^9.0.1",
+    "rimraf": "^3.0.2",
     "third-party-web": "^0.12.0"
   }
 }
