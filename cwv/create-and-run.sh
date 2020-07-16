@@ -9,7 +9,7 @@ ZONE=us-central1-a
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances create $INSTANCE_NAME \
   --image-family=ubuntu-1804-lts --image-project=ubuntu-os-cloud \
   --zone="$ZONE" \
-  --boot-disk-size=100GB \
+  --boot-disk-size=200GB \
   --machine-type=n1-standard-2
 
 cat > .tmp_env <<EOF
