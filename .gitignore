@@ -4,6 +4,8 @@ node_modules/
 dist/
 downloads/
 
+cwv/collection/data
+
 nohup.out
 *.gen.sql
 *.gen.json
