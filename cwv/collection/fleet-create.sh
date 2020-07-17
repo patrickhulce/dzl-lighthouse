@@ -9,5 +9,8 @@ cd .tmp/
 for instance in $(ls)
 do
   cd "$instance"
-  bash create-and-run.sh "$instance"
+  bash create-and-run.sh "$instance" &
+  cd ..
 done
+
+wait
