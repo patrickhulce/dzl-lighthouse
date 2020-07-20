@@ -18,6 +18,9 @@ do
   bash ./run-on-url.sh "$url" "$BLOCKED_PATTERNS" || echo "Run on $url failed :("
 done
 
+cp entity.txt data/
+cp urls.txt data/
+cp blocked-patterns.txt data/
 tar -czf trace-data.tar.gz data/
 
 echo "Run complete!"

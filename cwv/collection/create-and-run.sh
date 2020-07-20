@@ -25,6 +25,7 @@ done
 rm .tmp_env
 
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./setup-machine.sh $INSTANCE_NAME:/tmp/setup-machine.sh --zone="$ZONE"
+gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./entity.txt $INSTANCE_NAME:/tmp/entity.txt --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./urls.txt $INSTANCE_NAME:/tmp/urls.txt --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./blocked-patterns.txt $INSTANCE_NAME:/tmp/blocked-patterns.txt --zone="$ZONE"
 gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./run.sh $INSTANCE_NAME:/tmp/run.sh --zone="$ZONE"

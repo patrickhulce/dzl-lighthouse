@@ -4,7 +4,7 @@ const thirdPartyWeb = require('third-party-web')
 
 const SQL_IN = fs.readFileSync(path.join(__dirname, 'pages-for-entity.sql'), 'utf8')
 
-const entities = [
+const entityDomains = [
   'doubleclick.net',
   'youtube.com',
   'facebook.com',
@@ -19,9 +19,9 @@ const entities = [
 
 const MEGADATASET = []
 const WHERE_CLAUSES = []
-for (const entity_ of entities) {
-  const entity = thirdPartyWeb.getEntity(entity_)
-  if (!entity) throw new Error(`No entity for ${entity_}`)
+for (const entityDomain of entityDomains) {
+  const entity = thirdPartyWeb.getEntity(entityDomain)
+  if (!entity) throw new Error(`No entity for ${entityDomain}`)
   const domains = Array.from(
     new Set(
       entity.domains.map((domain) =>
@@ -46,7 +46,12 @@ for (const entity_ of entities) {
   if (fs.existsSync(expectedFilePath)) {
     console.warn(`Dataset found for ${entity.name}`)
     const dataset = JSON.parse(fs.readFileSync(expectedFilePath, 'utf8'))
-    MEGADATASET.push({patterns: domains, urls: dataset.map((item) => item.pageUrl)})
+    MEGADATASET.push({
+      entity,
+      domain: entityDomain,
+      patterns: domains,
+      urls: dataset.map((item) => item.pageUrl),
+    })
   } else {
     console.warn(`Dataset NOT found for ${entity.name}`)
   }
