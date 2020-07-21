@@ -2,7 +2,8 @@ SELECT
   NET.HOST(page) AS pageHost,
   MIN(page) AS pageUrl,
   MIN(url) AS requestUrl,
-  COUNT(url) AS requestCount
+  COUNT(url) AS requestCount,
+  RAND() AS randomSortKey
 FROM
   `httparchive.sample_data.requests_mobile_10k`
 WHERE
@@ -12,6 +13,6 @@ WHERE
 GROUP BY
   pageHost
 ORDER BY
-  requestCount DESC
+  randomSortKey DESC
 LIMIT
   1000

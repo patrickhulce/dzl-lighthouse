@@ -15,3 +15,6 @@
 1. Check status of collection, download data, and kill machines on completion.
    1. Run `bash collection/fleet-status.sh` to get status of each instance and download if done.
    1. Run `bash collection/fleet-status.sh --kill` to get status of each instance and download+kill if done.
+1. Analyze the results
+   1. Run `bash analyze/preprocess.sh` to extract the results from tar archives.
+   1. Run `node analyze/analyze-ab-test.js > results.csv` to dump the data into a CSV.

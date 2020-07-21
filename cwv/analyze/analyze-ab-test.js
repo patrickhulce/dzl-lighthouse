@@ -6,15 +6,12 @@ const _ = require('lodash')
 const DATA_FOLDER = path.join(__dirname, '../collection/data')
 
 const METRICS_TO_USE = new Set([
+  'performance',
   'firstContentfulPaint',
-  'firstMeaningfulPaint',
   'largestContentfulPaint',
-  'firstCPUIdle',
   'interactive',
   'speedIndex',
-  'estimatedInputLatency',
   'totalBlockingTime',
-  'maxPotentialFID',
   'cumulativeLayoutShift',
 ])
 
@@ -54,7 +51,10 @@ function readDataset() {
           blocked: runName.includes('blocked'),
           index: Number(runName.split('-')[0]),
           pathOnDisk,
-          metrics: _.get(lhr, 'audits.metrics.details.items[0]'),
+          metrics: {
+            performance: _.get(lhr, 'categories.performance.score'),
+            ..._.get(lhr, 'audits.metrics.details.items[0]'),
+          },
         })
       }
     }
@@ -66,7 +66,7 @@ function readDataset() {
 /** @param {Array<DataItem>} items */
 function processIntoRows(items) {
   /** @type {string[]} */
-  const headers = ['Entity', 'URL', 'Delta']
+  const headers = ['Entity', 'URL', 'Impact']
   const byEntity = Object.values(_.groupBy(items, (item) => item.entityDomain))
   const rows = _.flatten(
     byEntity.map((group) => Object.values(_.groupBy(group, (item) => item.url))),
@@ -75,6 +75,8 @@ function processIntoRows(items) {
   const mappedRows = rows.map((row) => {
     const regularItems = row.filter((item) => !item.blocked)
     const blockedItems = row.filter((item) => item.blocked)
+    const stddev = (items, mean) =>
+      Math.sqrt(_.sum(items.map((x) => Math.pow(x - mean, 2))) / Math.max(items.length - 1, 1))
 
     const data = [thirdPartyWeb.getEntity(row[0].entityDomain).name, row[0].url, 0]
     const deltas = []
@@ -83,34 +85,41 @@ function processIntoRows(items) {
       if (!METRICS_TO_USE.has(key)) continue
 
       const keyFn = (item) => item.metrics[key]
+      const regularMean = _.mean(regularItems.map(keyFn))
+      const blockedMean = _.mean(blockedItems.map(keyFn))
       deltas.push(
-        _.mean(blockedItems.map(keyFn) - _.mean(regularItems.map(keyFn))) *
+        (regularMean - blockedMean) *
           (key === 'cumulativeLayoutShift'
-            ? 3000
+            ? 5000
+            : key === 'performance'
+            ? -5000
             : key === 'totalBlockingTime'
-            ? 10
-            : key === 'maxPotentialFID'
-            ? 10
+            ? 2
             : 1),
       )
+
       data.push(
         _.min(regularItems.map(keyFn)),
-        _.mean(regularItems.map(keyFn)),
+        regularMean,
         _.max(regularItems.map(keyFn)),
+        stddev(regularItems.map(keyFn), regularMean),
         _.min(blockedItems.map(keyFn)),
-        _.mean(blockedItems.map(keyFn)),
+        blockedMean,
         _.max(blockedItems.map(keyFn)),
-        _.mean(blockedItems.map(keyFn)) - _.mean(regularItems.map(keyFn)),
+        stddev(blockedItems.map(keyFn), blockedMean),
+        regularMean - blockedMean,
       )
 
       if (headers.length < data.length) {
         headers.push(`${key} Min`)
         headers.push(`${key} Mean`)
         headers.push(`${key} Max`)
+        headers.push(`${key} Stddev`)
         headers.push(`${key} Min (Blocked)`)
         headers.push(`${key} Mean (Blocked)`)
         headers.push(`${key} Max (Blocked)`)
-        headers.push(`${key} Delta`)
+        headers.push(`${key} Stddev (Blocked)`)
+        headers.push(`${key} Impact`)
       }
     }
 

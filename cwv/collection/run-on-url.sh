@@ -27,7 +27,7 @@ do
       continue
     fi
 
-    LIGHTHOUSE_FLAGS="--output=json --output-path=lhr.json -GA"
+    LIGHTHOUSE_FLAGS="--chrome-flags=--disable-features=site-per-process --output=json --output-path=lhr.json -GA"
     if [[ "$RUN_TYPE" == "blocked" ]]; then
       LIGHTHOUSE_FLAGS="$LIGHTHOUSE_FLAGS $BLOCKED_PATTERNS_FLAGS"
     fi
