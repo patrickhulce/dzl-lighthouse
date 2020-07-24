@@ -9,7 +9,7 @@ cd ../collection/data
 
 rm -rf data/
 
-for f in *.tar.gz ;
+for f in lhr-*.tar.gz ;
 do
   TARGET_DIR="${f%.tar.gz}"
   if [[ -d "$TARGET_DIR" ]]; then

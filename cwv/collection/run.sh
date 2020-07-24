@@ -22,5 +22,6 @@ cp entity.txt data/
 cp urls.txt data/
 cp blocked-patterns.txt data/
 tar -czf trace-data.tar.gz data/
+find data/ -name "lhr.json" -o -name "*.txt" | tar -czf lhr-data.tar.gz -T -
 
 echo "Run complete!"

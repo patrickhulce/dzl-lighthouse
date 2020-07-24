@@ -17,6 +17,8 @@ cd ./data
 # Import NUMBER_OF_RUNS vars
 source /home/lighthouse/.env
 
+EXTRA_LIGHTHOUSE_FLAGS=${BASE_LIGHTHOUSE_FLAGS:-}
+
 for (( i = 0; i < $NUMBER_OF_RUNS; i++ ))
 do
   for RUN_TYPE in regular blocked ; do
@@ -27,9 +29,9 @@ do
       continue
     fi
 
-    LIGHTHOUSE_FLAGS="--chrome-flags=--disable-features=site-per-process --output=json --output-path=lhr.json -GA"
+    LIGHTHOUSE_FLAGS="$EXTRA_LIGHTHOUSE_FLAGS --output=json --output-path=lhr.json -GA"
     if [[ "$RUN_TYPE" == "blocked" ]]; then
-      LIGHTHOUSE_FLAGS="$LIGHTHOUSE_FLAGS $BLOCKED_PATTERNS_FLAGS"
+      LIGHTHOUSE_FLAGS="$BLOCKED_PATTERNS_FLAGS $LIGHTHOUSE_FLAGS"
     fi
 
     xvfb-run lighthouse "$URL" $LIGHTHOUSE_FLAGS ||

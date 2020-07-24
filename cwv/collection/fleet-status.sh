@@ -20,12 +20,14 @@ do
     printf "Done!\n"
 
     DATA_DEST="./data/trace-data-$instance.tar.gz"
+    LHR_DEST="./data/lhr-data-$instance.tar.gz"
     mkdir -p data/
     if [[ -f "$DATA_DEST" ]]; then
       echo "Data already downloaded, skipping..."
     else
       printf "Dowloading data..."
       gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp $instance:/home/lighthouse/trace-data.tar.gz "$DATA_DEST" --zone="$ZONE"
+      gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp $instance:/home/lighthouse/lhr-data.tar.gz "$LHR_DEST" --zone="$ZONE"
       printf "done!\n"
     fi
 
