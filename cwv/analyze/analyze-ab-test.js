@@ -27,6 +27,8 @@ const METRICS_TO_USE = new Set([
 
 /** @return {Array<DataItem>} */
 function readDataset() {
+  let earliestDate = Date.now()
+  let latestDate = 0
   /** @type {Array<DataItem>} */
   const dataset = []
 
@@ -45,12 +47,17 @@ function readDataset() {
         console.error('Reading', runName, 'of', urlName, '...')
         const pathOnDisk = path.join(urlFolderPath, runName)
         const lhr = JSON.parse(fs.readFileSync(path.join(pathOnDisk, 'lhr.json'), 'utf8'))
+        const fetchTimeIso = _.get(lhr, 'fetchTime')
+        const fetchTimeMs = new Date(fetchTimeIso).getTime()
+        if (fetchTimeMs) earliestDate = Math.min(fetchTimeMs, earliestDate)
+        if (fetchTimeMs) latestDate = Math.max(fetchTimeMs, latestDate)
         dataset.push({
           url: lhr.requestedUrl,
           entityDomain,
           blocked: runName.includes('blocked'),
           index: Number(runName.split('-')[0]),
           pathOnDisk,
+          dateCollected: fetchTimeIso,
           metrics: {
             performance: _.get(lhr, 'categories.performance.score'),
             ..._.get(lhr, 'audits.metrics.details.items[0]'),
@@ -60,6 +67,7 @@ function readDataset() {
     }
   }
 
+  console.warn('Collection took', Math.round((latestDate - earliestDate) / 60e3), 'minutes')
   return dataset
 }
 
@@ -78,11 +86,17 @@ function processIntoRows(items) {
     const stddev = (items, mean) =>
       Math.sqrt(_.sum(items.map((x) => Math.pow(x - mean, 2))) / Math.max(items.length - 1, 1))
 
+    let isInvalid = false
     const data = [thirdPartyWeb.getEntity(row[0].entityDomain).name, row[0].url, 0]
     const deltas = []
 
     for (const key of Object.keys(row[0].metrics)) {
       if (!METRICS_TO_USE.has(key)) continue
+      if (row.some((item) => !Number.isFinite(item.metrics[key]))) {
+        isInvalid = true
+        console.warn(`${row[0].url} had invalid ${key}, skipping...`)
+        break
+      }
 
       const keyFn = (item) => item.metrics[key]
       const regularMean = _.mean(regularItems.map(keyFn))
@@ -124,10 +138,10 @@ function processIntoRows(items) {
     }
 
     data[2] = _.mean(deltas)
-    return data
+    return isInvalid ? undefined : data
   })
 
-  return [headers, ...mappedRows]
+  return [headers, ...mappedRows.filter(Boolean)]
 }
 
 process.stdout.write(
