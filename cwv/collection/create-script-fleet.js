@@ -6,7 +6,8 @@ const TMP_DIR = path.join(__dirname, '.tmp')
 rimraf.sync(TMP_DIR)
 fs.mkdirSync(TMP_DIR)
 
-const URLS_PER_MACHINE = 10
+const START_INDEX = 0
+const URLS_PER_MACHINE = 100
 
 const MEGADATASET = require('../bigquery/datasets/megadataset.gen.json')
 MEGADATASET.forEach((entity, i) => {
@@ -22,5 +23,8 @@ MEGADATASET.forEach((entity, i) => {
   )
 
   // TODO: split *all* URLs across different indexes
-  fs.writeFileSync(path.join(dir, 'urls.txt'), entity.urls.slice(0, URLS_PER_MACHINE).join('\n'))
+  fs.writeFileSync(
+    path.join(dir, 'urls.txt'),
+    entity.urls.slice(START_INDEX, URLS_PER_MACHINE).join('\n'),
+  )
 })

@@ -43,7 +43,10 @@ do
     mv ./latest-run "$FOLDER_NAME"
 
     if [ "$i" -gt "0" ]; then
+      # Only keep the trace for the first run of each type
       echo "{}" > "$FOLDER_NAME/artifacts.json"
+      echo "{}" > "$FOLDER_NAME/defaultPass.trace.json"
+      echo "{}" > "$FOLDER_NAME/defaultPass.devtoolslog.json"
     fi
   done
 done
