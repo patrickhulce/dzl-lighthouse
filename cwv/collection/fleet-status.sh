@@ -22,7 +22,7 @@ do
     DATA_DEST="./data/trace-data-$instance.tar.gz"
     LHR_DEST="./data/lhr-data-$instance.tar.gz"
     mkdir -p data/
-    if [[ -f "$DATA_DEST" ]]; then
+    if [[ -f "$LHR_DEST" ]]; then
       echo "Data already downloaded, skipping..."
     else
       printf "Dowloading data..."
