@@ -6,12 +6,13 @@ const TMP_DIR = path.join(__dirname, '.tmp')
 rimraf.sync(TMP_DIR)
 fs.mkdirSync(TMP_DIR)
 
+const MACHINE_BASE_INDEX = 0
 const START_INDEX = 0
-const URLS_PER_MACHINE = 100
+const URLS_PER_MACHINE = 250
 
 const MEGADATASET = require('../bigquery/datasets/megadataset.gen.json')
 MEGADATASET.forEach((entity, i) => {
-  const dir = path.join(TMP_DIR, `instance${i}`)
+  const dir = path.join(TMP_DIR, `instance${MACHINE_BASE_INDEX + i}`)
   fs.mkdirSync(dir)
   const files = fs.readdirSync(__dirname).filter((f) => f.endsWith('.sh'))
   files.forEach((f) => fs.copySync(path.join(__dirname, f), path.join(dir, f)))
