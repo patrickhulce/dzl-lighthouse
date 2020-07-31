@@ -15,7 +15,7 @@ gcloud --project="$CLOUDSDK_CORE_PROJECT" compute instances create $INSTANCE_NAM
 
 cat > .tmp_env <<EOF
 export NUMBER_OF_RUNS=9
-export BASE_LIGHTHOUSE_FLAGS="--throttling-method=devtools --max-wait-for-load=90000"
+export BASE_LIGHTHOUSE_FLAGS="--throttling-method=devtools --max-wait-for-load=90000 --chrome-flags=--disable-features=site-per-process"
 EOF
 # Instance needs time to start up.
 until gcloud --project="$CLOUDSDK_CORE_PROJECT" compute scp ./.tmp_env $INSTANCE_NAME:/tmp/lhenv --zone="$ZONE"

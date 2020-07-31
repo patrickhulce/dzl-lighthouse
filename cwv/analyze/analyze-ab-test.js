@@ -37,6 +37,7 @@ function readDataset() {
     if (!fs.statSync(instanceFolderPath).isDirectory()) continue
 
     const entityDomain = fs.readFileSync(path.join(instanceFolderPath, 'entity.txt'), 'utf8').trim()
+    const entity = thirdPartyWeb.getEntity(entityDomain)
     for (const urlName of fs.readdirSync(instanceFolderPath)) {
       const urlFolderPath = path.join(instanceFolderPath, urlName)
       if (!fs.statSync(urlFolderPath).isDirectory()) continue
@@ -59,6 +60,9 @@ function readDataset() {
           pathOnDisk,
           dateCollected: fetchTimeIso,
           metrics: {
+            entityRequestCount: _.get(lhr, 'audits.network-requests.details.items', []).filter(
+              (request) => thirdPartyWeb.getEntity(request.url) === entity,
+            ).length,
             performance: _.get(lhr, 'categories.performance.score'),
             ..._.get(lhr, 'audits.metrics.details.items[0]'),
           },
@@ -74,7 +78,7 @@ function readDataset() {
 /** @param {Array<DataItem>} items */
 function processIntoRows(items) {
   /** @type {string[]} */
-  const headers = ['Entity', 'URL', 'Impact']
+  const headers = ['Entity', 'URL', 'Entity Request Count', 'Impact']
   const byEntity = Object.values(_.groupBy(items, (item) => item.entityDomain))
   const rows = _.flatten(
     byEntity.map((group) => Object.values(_.groupBy(group, (item) => item.url))),
@@ -87,7 +91,12 @@ function processIntoRows(items) {
       Math.sqrt(_.sum(items.map((x) => Math.pow(x - mean, 2))) / Math.max(items.length - 1, 1))
 
     let isInvalid = false
-    const data = [thirdPartyWeb.getEntity(row[0].entityDomain).name, row[0].url, 0]
+    const data = [
+      thirdPartyWeb.getEntity(row[0].entityDomain).name,
+      row[0].url,
+      Math.min(...regularItems.map((item) => item.metrics.entityRequestCount)),
+      0,
+    ]
     const deltas = []
 
     for (const key of Object.keys(row[0].metrics)) {
@@ -137,7 +146,7 @@ function processIntoRows(items) {
       }
     }
 
-    data[2] = _.mean(deltas)
+    data[3] = _.mean(deltas)
     return isInvalid ? undefined : data
   })
 
